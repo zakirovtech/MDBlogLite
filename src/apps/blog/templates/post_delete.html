@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row-g3">
+    <form method="post">
+        {% csrf_token %}
+        <p class="lead">Are you sure you want to delete "{{ object }}"?</p>
+        <div class="col-sm-7 mb-3">
+            {{ form }}    
+        </div>
+        <input type="submit" class="btn btn-primary" value="Confirm">
+    </form>
+</div>
+{% endblock content %}

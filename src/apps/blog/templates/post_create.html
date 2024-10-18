@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="row-g3">
+        <div class="col-auto">
+            <span id="headerHelpInline" class="form-text">
+              Header must be 1-128 characters long.
+            </span>
+          </div>
+        <div class="col-sm-4 mb-3">
+            {{ form.header }}
+        </div>
+        <div id="contentHelpBlock" class="form-text">
+            Use markdown syntax creating a new post
+        </div>
+        <div class="col-sm-8 mb-3">
+            {{ form.body }}
+        </div>
+    </div>
+    {{form.author}}
+    <button type="submit" class="btn btn-primary">Create</button>
+</form>
+  
+{% endblock content %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if not posts %}
+<p class="lead">Author does not have any posts yet...</p>
+{% else %}
+{% for markdown, post in posts %}
+<div class="container-sm row justify-content-center">
+    <div class="col-md-6 mt-3">
+        <a class="link-dark text-decoration-none" href="{{ post.get_absolute_url }}"><h2 class="display-6">{{post.header}}</h2></a>
+        <div class="bg-light">
+            <i class="bi bi-eye me-1"></i><span class="fw-lighter me-3">{{post.get_post_views}}</span>
+            <i class="bi bi-calendar me-1"></i><span class="fw-lighter">{{post.date_created|date:"d F Y"}} at {{post.date_created|time:"H:i"}}</span>
+            {% if request.user.is_authenticated%}<a class="link-dark" href="{{ post.get_delete_url }}"><span class="fw-lighter">Delete Post</span></a>{% endif %}
+        </div>
+        <div class="markdown-content">
+            <p class="font-monospace">{{markdown|truncatechars:300|safe}}</p>
+        </div>
+        <a class="link-dark text-decoration-none" href="{{ post.get_absolute_url }}"><span class="font-monospace">Continue...</span></a>
+        <hr>
+    </div>
+    
+</div>
+{% endfor %}
+{% endif %}
+<div class="pagination">
+    <!--Default Django pagination-->
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a class="link-dark" href="?page=1">&laquo; first</a>
+            <a class="link-dark" href="?page={{ page_obj.previous_page_number }}">previous</a>
+        {% endif %}
+
+        <span class="current lead">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+            <a class="link-dark" href="?page={{ page_obj.next_page_number }}">next</a>
+            <a class="link-dark" href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+{% endblock content %}
