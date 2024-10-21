@@ -34,13 +34,13 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-
-    "apps.blog.middleware.ratelimit.RateLimitMiddleware",
-
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+
+    "apps.blog.middleware.ratelimit.RateLimitMiddleware",
+
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -142,3 +142,26 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE") == "True"
 SESSION_COOKIE_AGE = int(config("SESSION_COOKIE_AGE"))
 SESSION_COOKIE_HTTPONLY = config("SESSION_COOKIE_HTTPONLY") == "True"
+
+# Bleach
+ALLOWED_TAGS = [
+    "a", "strong", "em", "b", "i", "u", "s",
+    "ul", "ol", "li", "p", "br",
+    "h1", "h2", "h3", "h4", "h5", "h6",
+    "blockquote", "code", "pre"
+]
+
+ALLOWED_ATTRIBUTES = {
+    "a": ["href", "title", "target", "id"],
+    "p": ["class", "id"],
+    "h1": ["class", "id"],
+    "h2": ["class", "id"],
+    "h3": ["class", "id"],
+    "h4": ["class", "id"],
+    "h5": ["class", "id"],
+    "h6": ["class", "id"],
+    "blockquote": ["class", "id"],
+    "code": ["class", "id"],
+    "pre": ["class", "id"],
+    "i": ["class", "id"]
+}

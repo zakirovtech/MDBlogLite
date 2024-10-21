@@ -1,14 +1,15 @@
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count
 from django.db.models.query import QuerySet
+from django.forms import BaseModelForm
 from django.http import HttpRequest, Http404
 from django.http.response import HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
-from django.utils.safestring import mark_safe
 from django.views import generic, View
-import markdown
+
 from typing import Any
+from urllib.parse import quote
 
 from apps.blog.models import Bio, Post, Ip
 from config import settings
@@ -19,25 +20,22 @@ from apps.blog.utils import PostViewsCounterMixin, CommonContextMixin
 class HomeView(CommonContextMixin, generic.TemplateView):
     template_name = "home.html"
     
-    def get_queryset(self):
-        return Post.objects.annotate(views=Count("ips")).filter(is_active=True).order_by("-views")[:3]
+    def get_queryset(self) -> QuerySet[Any]:
+        return Post.objects.filter(is_active=True).annotate(views=Count("ips")).prefetch_related("ips").order_by("-views")[:3]
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update(self.get_common_context())
+        context.update(self.get_common_context(title="Home"))
 
         object_list = self.get_queryset()
-        markdown_posts = [mark_safe(markdown.markdown(post.body)) for post in object_list]
-        most_viewed_posts = list(zip(markdown_posts, object_list))
-
-        context.update({"most_viewed_posts": most_viewed_posts})
+        context.update({"most_viewed_posts": object_list})
         return context
 
     
 class SearchView(View):
     def get(self, request, *args, **kwargs):
-        query = request.GET.get('q')
-        print(request.GET   )
+        query = quote(request.GET.get('q'))
+
         if query:
             google_search_url = f"https://www.google.com/search?q={settings.config('SITE_DOMAIN')}: {query}"
             return redirect(google_search_url)
@@ -47,24 +45,16 @@ class SearchView(View):
 class PostListView(CommonContextMixin, generic.ListView):
     model = Post
     paginate_by = 5
-    context_object_name = "posts"   
+    context_object_name = "posts"
     template_name = "post_list.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update(self.get_common_context())
+        context.update(self.get_common_context(title="Blog"))
         return context
     
     def get_queryset(self) -> QuerySet[Any]:
-        return super().get_queryset().filter(is_active=True)
-    
-    def get(self, request, *args, **kwargs):
-        self.object_list = self.get_queryset()
-        markdown_posts = [mark_safe(markdown.markdown(post.body)) for post in self.object_list]
-        self.object_list = list(zip(markdown_posts, self.object_list))  
-        
-        context = self.get_context_data()
-        return self.render_to_response(context)
+        return super().get_queryset().filter(is_active=True).annotate(views=Count("ips"))
 
 
 class PostDetailView(PostViewsCounterMixin, CommonContextMixin, generic.DetailView):
@@ -77,6 +67,9 @@ class PostDetailView(PostViewsCounterMixin, CommonContextMixin, generic.DetailVi
         context = super().get_context_data(**kwargs)
         context.update(self.get_common_context())
         return context
+
+    def get_queryset(self):
+        return super().get_queryset().annotate(views=Count("ips"))
     
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -87,8 +80,7 @@ class PostDetailView(PostViewsCounterMixin, CommonContextMixin, generic.DetailVi
         if not self.object.ips.filter(id=ip.id).exists(): # Unique views
             self.object.ips.add(ip)
         
-        post_markdown = mark_safe(markdown.markdown(self.object.body))
-        context = self.get_context_data(object=self.object, post_markdown=post_markdown)
+        context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
 
 
@@ -99,12 +91,14 @@ class PostCreateView(CommonContextMixin, generic.CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update(self.get_common_context())
+        context.update(self.get_common_context(title="Create new post"))
         return context
 
-    def post(self, request: HttpRequest, *args: str, **kwargs: Any) -> HttpResponse:
-        post = Post.objects.create(author=request.user, header=request.POST.get("header"), body=request.POST.get("body"))
-        return redirect("post-detail", id=post.id )
+    def form_valid(self, form: BaseModelForm) -> HttpResponse:
+        post = form.save(commit=False)
+        post.author = self.request.user
+        post.save()
+        return redirect("post-detail", id=post.id)
 
 
 class PostUpdateView(CommonContextMixin, generic.UpdateView):
@@ -115,7 +109,7 @@ class PostUpdateView(CommonContextMixin, generic.UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update(self.get_common_context())
+        context.update(self.get_common_context(title="Update current post"))
         return context
 
     def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
@@ -136,29 +130,25 @@ class PostDeleteView(CommonContextMixin, generic.DeleteView):
         return context
 
 
-class BioShowView(CommonContextMixin, View):
+class BioShowView(CommonContextMixin, generic.TemplateView):
     template_name = "bio.html"
 
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
-        bio = Bio.objects.first() # By default that model contains jone object
+        bio = Bio.objects.first() # By default that model contains just one object
         
-        if not bio and request.user.is_authenticated:
-            return redirect('bio-init')
-        
-        if not bio and not request.user.is_authenticated:
-            raise Http404("Author has not created a bio yet")
+        if not bio:
+            if request.user.is_authenticated:
+                return redirect('bio-init')
+            else:
+                raise Http404("Author has not created a bio yet")
     
-        context = {
-            "title": "About me",
-            "bio": bio,
-            "bio_markdown": mark_safe(markdown.markdown(bio.body))    
-        }
+        context = self.get_context_data(title="About me", bio=bio)
         context.update(self.get_common_context())
 
         return render(request, template_name=self.template_name, context=context)
     
 
-class BioInitView(CommonContextMixin, View):
+class BioInitView(CommonContextMixin, generic.TemplateView):
     template_name = "bio_init.html"
 
     def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
@@ -166,51 +156,77 @@ class BioInitView(CommonContextMixin, View):
             raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)
 
-    def get(self, request: HttpRequest, *args: Any, **kwargs: Any):
-        form = BioForm()
-        
-        context = {"title": "Create your bio", 'form': form}
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            "title": "Create your bio",
+            "form": kwargs.get("form", BioForm())
+        })
         context.update(self.get_common_context())
-        
+        return context
+    
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any):
+        context = self.get_context_data()
         return render(request, self.template_name, context=context)
     
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any):
         form = BioForm(request.POST, request.FILES)
-        
-        context = {"title": "Create your bio", 'form': form}
-        context.update(self.get_common_context())
 
         if form.is_valid():
             form.save()
             return redirect('bio')
         
+        context = self.get_context_data(form=form)
         return render(request, self.template_name, context=context)
     
-class BioUpdateView(CommonContextMixin, View):
+
+class BioUpdateView(CommonContextMixin, generic.TemplateView):
     template_name = "bio_update.html"
     
     def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         if not request.user.is_authenticated:
             raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            "title": "Upadate your bio"
+        })
+        context.update(self.get_common_context())
+        return context
 
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any):
         obj = Bio.objects.first()
         form = BioForm(instance=obj)
         
-        context = {"title": "Update your bio", 'form': form}
-        context.update(self.get_common_context())
+        context = self.get_context_data(form=form)
         return render(request, self.template_name, context=context)
 
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any):
         obj = Bio.objects.first()
         form = BioForm(request.POST, request.FILES, instance=obj)
-        
-        context = {"title": "Update your bio", 'form': form}
-        context.update(self.get_common_context())
+        context = self.get_context_data(form=form)
         
         if form.is_valid():
             form.save()
             return redirect('bio')
         
         return render(request, self.template_name, context=context)
+
+
+class BioDeleteView(CommonContextMixin, generic.DeleteView):
+    model = Bio
+    template_name = "bio_delete.html"
+    success_url = reverse_lazy("bio-init")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(self.get_common_context(title="Delete bio"))
+        return context
+    
+    def get_object(self, queryset=None):
+        bio = Bio.objects.first()
+        if bio is None:
+            raise Http404("Bio not found")
+        return bio

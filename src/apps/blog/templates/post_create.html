@@ -18,9 +18,15 @@
         <div class="col-sm-8 mb-3">
             {{ form.body }}
         </div>
+        <div id="contentHelpBlock" class="form-text">
+            Is the post active? You can hide the post's visibility here. But be careful: to make the post visible again, you'll need to visit the admin panel.
+        </div>
+        <div class="col-sm-7 mb-3">
+            {{ form.is_active }}
+        </div>
     </div>
     {{form.author}}
-    <button type="submit" class="btn btn-primary">Create</button>
+    <button type="submit" class="btn btn-outline-success">Create</button>
 </form>
   
 {% endblock content %}

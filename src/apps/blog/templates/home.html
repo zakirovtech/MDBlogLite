@@ -3,17 +3,20 @@
 <title>{{ title }}</title>
 
 {% block content %}
-{% for markdown, post in most_viewed_posts %}
+{% for post in most_viewed_posts %}
 <div class="container-sm row justify-content-center">
     <div class="col-md-6 mt-3">
         <a class="link-dark text-decoration-none" href="{{ post.get_absolute_url }}"><h2 class="display-6">{{post.header}}</h2></a>
         <div class="bg-light">
-            <i class="bi bi-eye me-1"></i><span class="fw-lighter me-3">{{post.get_post_views}}</span>
+            <i class="bi bi-eye me-1"></i><span class="fw-lighter me-3">{{post.views}}</span>
             <i class="bi bi-calendar me-1"></i><span class="fw-lighter">{{post.date_created|date:"d F Y"}} at {{post.date_created|time:"H:i"}}</span>
-            {% if request.user.is_authenticated%}<a class="link-dark" href="{{ post.get_delete_url }}"><span class="fw-lighter">Delete Post</span></a>{% endif %}
+            {% if request.user.is_authenticated%}
+            <i class="bi bi-pencil me-1"></i><a class="link-dark" href="{{ post.get_update_url }}"><span class="fw-lighter me-1">Edit Post</span></a>
+            <i class="bi bi-trash me-1"></i> <a class="link-dark" href="{{ post.get_delete_url }}"><span class="fw-lighter me-1">Delete Post</span></a>
+            {% endif %}
         </div>
         <div class="markdown-content">
-            <p class="font-monospace">{{markdown|truncatechars:300|safe}}</p>
+            <p class="font-monospace">{{post.body|truncatechars:300|safe}}</p>
         </div>
         <a class="link-dark text-decoration-none" href="{{ post.get_absolute_url }}"><span class="font-monospace">Continue...</span></a>
         <hr>

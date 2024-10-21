@@ -1,4 +1,5 @@
 from django import forms
+
 from apps.blog.models import Bio, Post
 
 
@@ -9,11 +10,9 @@ class BioForm(forms.ModelForm):
         widgets = {
             'body': forms.Textarea(attrs={
                 'class': 'form-control',
-                'placeholder': "Use can use markdown or html filling this space",
+                'placeholder': "You can use markdown or html filling this space",
                 'id': 'body-field',
                 "aria-describedby": "basic-addon2",
-                "rows": 20,
-                "cols": 30,
             }),
             'image': forms.FileInput(attrs={
                 'class': 'form-control',
@@ -21,6 +20,7 @@ class BioForm(forms.ModelForm):
                 "aria-describedby": "basic-addon3"
             })
         }
+
 
 class PostForm(forms.ModelForm):
     class Meta:
@@ -31,9 +31,7 @@ class PostForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': "What's happening?",
                 'id': 'body-field',
-                "aria-describedby": "basic-addon2",
-                "rows": 20,
-                "cols": 30,
+                "aria-describedby": "basic-addon2"
             }),
             "header": forms.TextInput(attrs={
                 "class": "form-control",

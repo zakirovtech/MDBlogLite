@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h3 class="display-6">Let`s create your short biography</h2>
+<p class="lead">Let`s create your short biography</p>
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="row-g3">
@@ -14,7 +14,7 @@
         </div>
     </div>
 
-    <button type="submit" class="btn btn-primary">Save</button>
+    <button type="submit" class="btn btn-outline-success">Save</button>
 </form>
 
 {% endblock content %}
