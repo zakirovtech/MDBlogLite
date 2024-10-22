@@ -1,3 +1,9 @@
+import logging
+from typing import Any
+from urllib.parse import quote
+
+from django.conf import settings
+from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count
 from django.db.models.query import QuerySet
@@ -8,13 +14,11 @@ from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views import generic, View
 
-from typing import Any
-from urllib.parse import quote
-
 from apps.blog.models import Bio, Post, Ip
-from config import settings
 from apps.blog.forms import BioForm, PostForm
 from apps.blog.utils import PostViewsCounterMixin, CommonContextMixin
+
+logger = logging.getLogger("blog")
 
 
 class HomeView(CommonContextMixin, generic.TemplateView):
@@ -37,7 +41,7 @@ class SearchView(View):
         query = quote(request.GET.get('q'))
 
         if query:
-            google_search_url = f"https://www.google.com/search?q={settings.config('SITE_DOMAIN')}: {query}"
+            google_search_url = f"https://www.google.com/search?q={settings.SITE_DOMAIN}: {query}"
             return redirect(google_search_url)
         return redirect('/')
 
@@ -47,6 +51,7 @@ class PostListView(CommonContextMixin, generic.ListView):
     paginate_by = 5
     context_object_name = "posts"
     template_name = "post_list.html"
+    cache_key = "post_list_cache"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -54,8 +59,11 @@ class PostListView(CommonContextMixin, generic.ListView):
         return context
     
     def get_queryset(self) -> QuerySet[Any]:
-        return super().get_queryset().filter(is_active=True).annotate(views=Count("ips"))
-
+        object_list = cache.get(self.cache_key)
+        if object_list is None:
+            object_list = super().get_queryset().filter(is_active=True).annotate(views=Count("ips"))
+            cache.set(self.cache_key, object_list, timeout=int(settings.CACHE_TIMEOUT))
+        return object_list
 
 class PostDetailView(PostViewsCounterMixin, CommonContextMixin, generic.DetailView):
     model = Post
@@ -67,19 +75,34 @@ class PostDetailView(PostViewsCounterMixin, CommonContextMixin, generic.DetailVi
         context = super().get_context_data(**kwargs)
         context.update(self.get_common_context())
         return context
+    
+    def set_cache_key(self):
+        return f"post_{self.kwargs.get('id')}_detail_cache"
+    
+    def track_unique_view(self, request):
+        address = self.get_client_address(request=request)
+        ip, _ = Ip.objects.get_or_create(ip=address)
+
+        if not self.object.ips.filter(id=ip.id).exists():
+            self.object.ips.add(ip)
 
     def get_queryset(self):
         return super().get_queryset().annotate(views=Count("ips"))
     
     def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
+        cache_key = self.set_cache_key()
+        self.object = cache.get(cache_key)
+        
+        if self.object is None:
+            queryset = self.get_queryset()
+            self.object = self.get_object(queryset)
+        
+            self.track_unique_view(request)
+            
+            cache.set(cache_key, self.object, timeout=int(settings.CACHE_TIMEOUT))
+        else:
+            self.track_unique_view(request)
 
-        address = self.get_client_address(request=request)
-        ip, _ = Ip.objects.get_or_create(ip=address)
-        
-        if not self.object.ips.filter(id=ip.id).exists(): # Unique views
-            self.object.ips.add(ip)
-        
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
 
@@ -132,16 +155,25 @@ class PostDeleteView(CommonContextMixin, generic.DeleteView):
 
 class BioShowView(CommonContextMixin, generic.TemplateView):
     template_name = "bio.html"
+    cache_key = "bio_show_cache"
 
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
-        bio = Bio.objects.first() # By default that model contains just one object
+        cached_bio = cache.get(self.cache_key)
         
-        if not bio:
-            if request.user.is_authenticated:
-                return redirect('bio-init')
-            else:
-                raise Http404("Author has not created a bio yet")
-    
+        if cached_bio:
+            bio = cached_bio
+            logger.info("Bio object fetched from cache.")
+        else:
+            bio = Bio.objects.first()
+            if not bio: # First start, for example
+                if request.user.is_authenticated:
+                    return redirect('bio-init')
+                else:
+                    raise Http404("Author has not created a bio yet")
+
+            cache.set(self.cache_key, bio, timeout=(60 * 60) * 24)
+            logger.info("Bio cached for 24 hours")
+
         context = self.get_context_data(title="About me", bio=bio)
         context.update(self.get_common_context())
 

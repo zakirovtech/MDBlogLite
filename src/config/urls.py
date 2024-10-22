@@ -1,11 +1,11 @@
+from django.conf import settings
 from django.contrib import admin
 from django.conf.urls.static import static
 from django.urls import path, include
 
-from config import settings
 
 urlpatterns = [
-    path(f"{settings.config('ADMIN_ENTRYPOINT')}", admin.site.urls),
+    path(f"{settings.ADMIN_ENTRYPOINT}", admin.site.urls),
     path("", include("apps.blog.urls"))
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 

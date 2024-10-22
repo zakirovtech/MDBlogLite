@@ -12,7 +12,9 @@ COPY . .
 
 WORKDIR /usr/app/src/scripts/
 
-RUN chmod +x entrypoint.sh
+RUN chmod +x entrypoint.sh \
+    && chmod +x wait-for-it.sh \
+    && chmod +x create_superuser.sh
 
 WORKDIR /usr/app/src/
 

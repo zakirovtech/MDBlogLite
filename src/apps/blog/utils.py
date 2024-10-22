@@ -1,4 +1,4 @@
-from config import settings
+from django.conf import settings
 
 
 class PostViewsCounterMixin:
@@ -11,7 +11,7 @@ class PostViewsCounterMixin:
 
 class CommonContextMixin:
     def get_common_context(self, *args, **kwargs):
-        context = {"blogname": settings.config("BLOG_NAME")} 
+        context = {"blogname": settings.BLOG_NAME} 
         if args:
             context.update({"extra_args": args})
         if kwargs:
