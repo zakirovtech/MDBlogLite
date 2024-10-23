@@ -17,6 +17,9 @@ class RateLimitMiddleware:
         request_count_key = f'rate_limit_{ip}'
         ban_key = f'banned_{ip}'
 
+        if request.user.is_staff:
+            return self.get_response(request)
+
         if cache.get(ban_key):
             logger.warning(f"[Banned IP: {ip}] SEND REQUESTS")
             return HttpResponseForbidden("Too many requests - you are temporarily banned.")

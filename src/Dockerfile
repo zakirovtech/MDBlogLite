@@ -3,6 +3,7 @@ FROM python:3.11-slim
 WORKDIR /usr/app/src/
 
 RUN apt-get update && apt-get upgrade -y
+RUN apt install gettext -y
 
 COPY ./requirements.txt .
 

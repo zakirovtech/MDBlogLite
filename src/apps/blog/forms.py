@@ -25,7 +25,7 @@ class BioForm(forms.ModelForm):
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = ["header", "body", "is_active"]
+        fields = ["header", "body", "image", "is_active"]
         widgets = {
             'body': forms.Textarea(attrs={
                 'class': 'form-control',
@@ -38,5 +38,10 @@ class PostForm(forms.ModelForm):
                 "placeholder": "Name the post",
                 "id": "header-field",
                 "aria-describedby": "basic-addon2"
+            }),
+             'image': forms.FileInput(attrs={
+                'class': 'form-control',
+                'id': 'image-field',    
+                "aria-describedby": "basic-addon3"
             })
         }

@@ -20,6 +20,15 @@ def delete_image_on_bio_delete(sender, instance, **kwargs):
             logger.info("Avatar is deleted")
 
 
+@receiver(post_delete, sender=Post)
+def delete_image_on_post_delete(sender, instance, **kwargs):
+    if instance.image:
+        image_path = instance.image.path
+        if os.path.exists(image_path):
+            os.remove(image_path)
+            logger.info(f"Image of post_{instance.id} deleted")
+
+
 @receiver(post_save, sender=Post)
 def clear_post_cache_on_save(sender, instance, created, **kwargs):
     cache.delete("post_list_cache")

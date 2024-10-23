@@ -6,7 +6,7 @@
     <div class="row-g3">
         <div class="col-auto">
             <span id="headerHelpInline" class="form-text">
-              Header must be 1-128 characters long.
+              Header must be 1-128 characters long
             </span>
           </div>
         <div class="col-sm-4 mb-3">
@@ -19,7 +19,13 @@
             {{ form.body }}
         </div>
         <div id="contentHelpBlock" class="form-text">
-            Is the post active? You can hide the post's visibility here. But be careful: to make the post visible again, you'll need to visit the admin panel.
+            You can add an image to you post
+        </div>
+        <div class="col-sm-4 mb-3">
+            {{ form.image }}
+        </div>
+        <div id="contentHelpBlock" class="form-text">
+            Is the post active? You can hide the post's visibility here. But be careful: to make the post visible again, you'll need to visit the admin panel
         </div>
         <div class="col-sm-7 mb-3">
             {{ form.is_active }}

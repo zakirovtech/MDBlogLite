@@ -11,6 +11,7 @@ class Post(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     header = models.CharField(max_length=128)
     body = models.TextField()
+    image = models.ImageField(upload_to="posts", null=True, blank=True)
     ips = models.ManyToManyField("Ip", related_name="posts", blank=True)
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(auto_now_add=True)

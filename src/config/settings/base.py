@@ -1,6 +1,7 @@
-from decouple import Config, Csv, RepositoryEnv
+from decouple import Config, RepositoryEnv, Csv
 import os
 from pathlib import Path
+import sentry_sdk
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -97,7 +98,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') 
+STATIC_ROOT = os.path.join(BASE_DIR, 'static') 
 
 # FILES
 MEDIA_URL = '/media/'
@@ -117,7 +118,7 @@ ALLOWED_TAGS = [
     "a", "strong", "em", "b", "i", "u", "s",
     "ul", "ol", "li", "p", "br",
     "h1", "h2", "h3", "h4", "h5", "h6",
-    "blockquote", "code", "pre"
+    "blockquote", "code", "pre", "hr"
 ]
 
 ALLOWED_ATTRIBUTES = {

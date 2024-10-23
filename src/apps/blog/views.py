@@ -159,7 +159,6 @@ class BioShowView(CommonContextMixin, generic.TemplateView):
 
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         cached_bio = cache.get(self.cache_key)
-        
         if cached_bio:
             bio = cached_bio
             logger.info("Bio object fetched from cache.")
