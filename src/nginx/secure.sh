@@ -1,9 +1,16 @@
-export NGINX_CONFIG=/etc/nginx/conf.d/default.conf
+set -a
+
+. ./env/.env
+
+set +a
+
+export NGINX_CONFIG=./nginx/nginx.conf
 
 cat <<EOL > $NGINX_CONFIG
 server {
     listen 80;
-    server_name $SITE_DOMAIN;
+    listen [::]:80
+    server_name $SITE_DOMAIN www.$SITE_DOMAIN;
 
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
@@ -38,5 +45,3 @@ server {
     }
 }
 EOL
-
-docker restart nginx

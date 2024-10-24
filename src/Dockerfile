@@ -18,5 +18,3 @@ RUN chmod +x entrypoint.sh \
     && chmod +x create_superuser.sh
 
 WORKDIR /usr/app/src/
-
-ENV PYTHONUNBUFFERED 1
