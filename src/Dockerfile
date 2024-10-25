@@ -2,6 +2,10 @@ FROM python:3.11-slim
 
 WORKDIR /usr/app/src/
 
+ENV PYTHONDONTWRITEBYTECODE 1
+
+ENV PYTHONDONUNBUFFERED 1
+
 RUN apt-get update && apt-get upgrade -y
 RUN apt install gettext -y
 

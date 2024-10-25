@@ -1,4 +1,4 @@
-env:
+environment:
 	cp ./env/.env.template ./env/.env
 
 prepare:
@@ -6,6 +6,12 @@ prepare:
 
 webserver:
 	./nginx/init.sh
+
+build:
+	docker compose -f docker-compose-production.yaml build --no-cache
+
+up:
+	docker compose -f docker-compose-production.yaml up -d
 
 secure:
 	./nginx/secure.sh
