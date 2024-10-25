@@ -29,6 +29,13 @@ CACHES = {
     }
 }
 
+# CSRF
+CSRF_TRUSTED_ORIGINS = [
+    f"https://{config('SITE_DOMAIN')}",
+    f"https://www.{config('SITE_DOMAIN')}",
+    "https://127.0.0.1"
+]
+
 # SENTRY
 SENTRY_STATUS = config("SENTRY_STATUS") == "ON"
 if SENTRY_STATUS:

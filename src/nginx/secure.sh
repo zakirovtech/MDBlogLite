@@ -20,9 +20,8 @@ server {
 }
 
 server {
-    listen 443 ssl;
-    listen [::]:443 ssl;
-    http2;
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
 
     server_name $SITE_DOMAIN;
 
@@ -30,11 +29,11 @@ server {
     ssl_certificate_key /etc/nginx/ssl/live/$SITE_DOMAIN/privkey.pem;
 
     location /static/ {
-        alias /static/;
+        alias /app/static/;
     }
 
     location /media/ {
-        alias /media/;
+        alias /app/media/;
     }
 
     location / {
