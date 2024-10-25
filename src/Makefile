@@ -15,3 +15,6 @@ up:
 
 secure:
 	./nginx/secure.sh
+
+restart:
+	docker compose -f docker-compose-production.yaml restart nginx
