@@ -2,7 +2,7 @@ environment:
 	cp ./env/.env.template ./env/.env
 
 prepare:
-	chmod +x ./nginx/init.sh && chmod +x ./nginx/secure.sh
+	chmod +x ./nginx/init.sh && chmod +x ./nginx/secure.sh && chmod +x ./certbot/init.sh
 
 webserver:
 	./nginx/init.sh

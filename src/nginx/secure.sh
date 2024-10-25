@@ -9,7 +9,7 @@ export NGINX_CONFIG=./nginx/nginx.conf
 cat <<EOL > $NGINX_CONFIG
 server {
     listen 80;
-    listen [::]:80
+    listen [::]:80;
     server_name $SITE_DOMAIN www.$SITE_DOMAIN;
 
     location /.well-known/acme-challenge/ {
@@ -20,8 +20,9 @@ server {
 }
 
 server {
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2;
 
     server_name $SITE_DOMAIN;
 
@@ -29,11 +30,11 @@ server {
     ssl_certificate_key /etc/nginx/ssl/live/$SITE_DOMAIN/privkey.pem;
 
     location /static/ {
-        alias /usr/app/src/static/;
+        alias /static/;
     }
 
     location /media/ {
-        alias /usr/app/src/media/;
+        alias /media/;
     }
 
     location / {
