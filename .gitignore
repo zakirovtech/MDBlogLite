@@ -62,10 +62,6 @@ db.sqlite3
 db.sqlite3-journal
 cache/
 
-# Project
-*/media/avatars/
-*/media/posts/
-
 # Flask stuff:
 instance/
 .webassets-cache
@@ -159,7 +155,16 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# EXTRA
+# Certbot files
 */certbot/www/
 */certbot/conf/
+
+# Nginx config
 */nginx/nginx.conf
+
+# Media files
+*/media/avatars/
+*/media/posts/
+
+# Static files
+*/static/
