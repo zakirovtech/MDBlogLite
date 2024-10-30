@@ -9,7 +9,7 @@ INTERNAL_IPS = ["127.0.0.1", "localhost", "172.18.0.1"]
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 ADMIN_ENTRYPOINT = "admin/"
-STATIC_URL = "static/"
+
 # DATABASES
 DATABASES = {
     'default': {
@@ -20,24 +20,18 @@ DATABASES = {
 
 # CACHE
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': BASE_DIR / 'cache'
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://cache:6379",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "pool_class": "redis.BlockingConnectionPool",
+        }
     }
-}   
+}
+
+# CELERY
+CELERY_BROKER_URL = 'redis://cache:6379/0'
 
 # SENTRY
-SENTRY_STATUS = config("SENTRY_STATUS") == "ON"
-if SENTRY_STATUS:
-    sentry_sdk.init(
-        dsn=config("SENTRY_DSN"),
-        # Set traces_sample_rate to 1.0 to capture 100%
-        # of transactions for tracing.
-        traces_sample_rate=1.0,
-        _experiments={
-            # Set continuous_profiling_auto_start to True
-            # to automatically start the profiler on when
-            # possible.
-            "continuous_profiling_auto_start": True,
-        },
-    )
+SENTRY_STATUS = False

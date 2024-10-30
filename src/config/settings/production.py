@@ -29,6 +29,9 @@ CACHES = {
     }
 }
 
+# CELERY
+CELERY_BROKER_URL = 'redis://cache:6379/0'
+
 # CSRF
 CSRF_TRUSTED_ORIGINS = [
     f"https://{config('SITE_DOMAIN')}",

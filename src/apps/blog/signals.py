@@ -7,26 +7,27 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from apps.blog.models import Bio, Post
+from apps.blog.tasks import delete_image
 
 logger = logging.getLogger("blog")
+
 
 @receiver(post_delete, sender=Bio)
 def delete_image_on_bio_delete(sender, instance, **kwargs):
     if instance.image:
-        image_path = instance.image.path
-
-        if os.path.exists(image_path) and "default" not in image_path:
-            os.remove(image_path)
-            logger.info("Avatar is deleted")
+        path = instance.image.path
+        name = str(instance)
+        id = instance.id
+        delete_image.delay(name, path, id)
 
 
 @receiver(post_delete, sender=Post)
 def delete_image_on_post_delete(sender, instance, **kwargs):
     if instance.image:
-        image_path = instance.image.path
-        if os.path.exists(image_path):
-            os.remove(image_path)
-            logger.info(f"Image of post_{instance.id} deleted")
+        path = instance.image.path
+        name = str(instance)
+        id = instance.id
+        delete_image.delay(name, path, id)
 
 
 @receiver(post_save, sender=Post)

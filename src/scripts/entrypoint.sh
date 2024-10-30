@@ -4,7 +4,7 @@ if [ "$DJANGO_ENV" = "development" ]; then
 
     python manage.py makemigrations --noinput
     python manage.py migrate --noinput
-    python manage.py collectstatic
+    python manage.py collectstatic  --noinput --clear
 
     ./scripts/create_superuser.sh
 
@@ -14,7 +14,7 @@ else
 
     python manage.py makemigrations --noinput
     python manage.py migrate --noinput
-    python manage.py collectstatic --noinput
+    python manage.py collectstatic --noinput --clear
 
     ./scripts/create_superuser.sh
     
