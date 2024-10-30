@@ -18,7 +18,7 @@
             {% endif %}
         </div>
         <div class="markdown-content">
-            <p class="font-monospace">{{post.body|truncatechars:300|safe}}</p>
+            <p class="font-monospace">{{post.get_truncated_body}}</p>
         </div>
         <a class="link-dark text-decoration-none" href="{{ post.get_absolute_url }}"><span class="font-monospace">Continue...</span></a>
         <hr>

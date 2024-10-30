@@ -118,7 +118,7 @@ ALLOWED_TAGS = [
     "a", "strong", "em", "b", "i", "u", "s",
     "ul", "ol", "li", "p", "br",
     "h1", "h2", "h3", "h4", "h5", "h6",
-    "blockquote", "code", "pre", "hr"
+    "blockquote", "code", "pre", "hr", "sub"
 ]
 
 ALLOWED_ATTRIBUTES = {

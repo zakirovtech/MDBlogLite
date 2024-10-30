@@ -13,7 +13,7 @@
             {% endif %}
         </div>
         <div class="markdown-content">
-            <p class="font-monospace">{{ post.body|safe }}</p>
+            <p class="font-monospace">{{ post.get_body_as_html|safe }}</p>
         </div>
         <div class="image-content">
             {%if post.image %}<img src="{{ post.image.url }}" class="img-thumbnail">{% endif %}

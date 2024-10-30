@@ -1,30 +1,49 @@
 import bleach
 import markdown
+import re
 
 from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
+from django.utils.html import mark_safe, strip_tags
 
 
-class Post(models.Model):
+class DateModel(models.Model):
+    date_created = models.DateTimeField(auto_now_add=True)
+    date_updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+
+class Post(DateModel):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     header = models.CharField(max_length=128)
     body = models.TextField()
     image = models.ImageField(upload_to="posts", null=True, blank=True)
     ips = models.ManyToManyField("Ip", related_name="posts", blank=True)
     is_active = models.BooleanField(default=True)
-    date_created = models.DateTimeField(auto_now_add=True)
-    date_updated = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
         return self.header
     
-    def save(self, *args, **kwargs) -> None:
-        """We should except some html tags escaping xss vulnerability"""
-        self.body = bleach.clean(markdown.markdown(self.body), tags=settings.ALLOWED_TAGS, attributes=settings.ALLOWED_ATTRIBUTES)
-        return super().save(*args, **kwargs)
+    def get_body_as_html(self):
+        html_body = markdown.markdown(self.body)
+
+        html_body = re.sub(
+        r'(<code.*?>)([\s\S]*?)(</code>)',
+        r'<pre>\1\2\3</pre>',
+        html_body
+        )
         
+        cleaned_body = bleach.clean(html_body, tags=settings.ALLOWED_TAGS, attributes=settings.ALLOWED_ATTRIBUTES)
+        return cleaned_body
+    
+    def get_truncated_body(self):
+        truncated_markdown = markdown.markdown(self.body)[:300] + "..."
+        return mark_safe(bleach.clean(truncated_markdown, tags=settings.ALLOWED_TAGS, attributes=settings.ALLOWED_ATTRIBUTES))
+
     def get_absolute_url(self):
         return reverse("post-detail", kwargs={"id": str(self.id)})
     
@@ -35,23 +54,19 @@ class Post(models.Model):
         return reverse("post-delete", kwargs={"id": str(self.id)})
     
 
-class Ip(models.Model):
+class Ip(DateModel):
     ip = models.GenericIPAddressField(null=True)
     is_restricted = models.BooleanField(default=False)
-    date_created = models.DateTimeField(auto_now_add=True)
-    date_updated = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
         return self.ip
 
 
-class Bio(models.Model):
+class Bio(DateModel):
     body = models.TextField()
     image = models.ImageField(upload_to="avatars", default="default/default_avatar.png", null=True, blank=True)
     is_active = models.BooleanField(default=True)
-    date_created = models.DateTimeField(auto_now_add=True)
-    date_updated = models.DateTimeField(auto_now=True)
-
+    
     class Meta:
         verbose_name = "Bio"    
         verbose_name_plural = "Bios"
