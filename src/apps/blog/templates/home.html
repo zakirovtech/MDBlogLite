@@ -3,20 +3,24 @@
 <title>{{ title }}</title>
 
 {% block content %}
-
-
 {% for post in most_viewed_posts %}
 <div class="container-sm row justify-content-center">
     <div class="col-md-6 mt-3">
         <a class="link-dark text-decoration-none" href="{{ post.get_absolute_url }}"><h2 class="display-6">{{post.header}}</h2></a>
-        <div class="bg-light">
-            <i class="bi bi-eye me-1"></i><span class="fw-lighter me-3">{{post.views}}</span>
-            <i class="bi bi-calendar me-1"></i><span class="fw-lighter">{{post.date_created|date:"d F Y"}} at {{post.date_created|time:"H:i"}}</span>
+        <div>
+            <i class="bi bi-eye me-1"></i><span class="fw-lighter me-1">{{post.views}}</span>
+            <i class="bi bi-calendar me-2"></i><span class="fw-lighter me-1">Created on {{post.date_updated|date:"d F Y"}} at {{post.date_updated|time:"H:i"}}</span>
             {% if request.user.is_authenticated%}
-            <i class="bi bi-pencil me-1"></i><a class="link-dark" href="{{ post.get_update_url }}"><span class="fw-lighter me-1">Edit Post</span></a>
-            <i class="bi bi-trash me-1"></i> <a class="link-dark" href="{{ post.get_delete_url }}"><span class="fw-lighter me-1">Delete Post</span></a>
+            <i class="bi bi-pencil me-1"></i><a class="link-dark" href="{{ post.get_update_url }}"><span class="fw-lighter me-1">Edit</span></a>
+            <i class="bi bi-trash me-1"></i><a class="link-dark" href="{{ post.get_delete_url }}"><span class="fw-lighter me-1">Delete</span></a>
             {% endif %}
+            <br>
+            <i class="bi bi-tag me-1"></i>
+            {% for tag in post.tags.all|dictsort:"name"%}
+            <span class="me-1"><a class="link-light bg-secondary" href="{{tag.get_absolute_url}}"> &nbsp; {{tag.name}} &nbsp;</a></span>
+            {% endfor %}
         </div>
+        <!--Markdown content-->
         <div class="markdown-content">
             <p class="font-monospace">{{post.get_truncated_body}}</p>
         </div>
@@ -25,4 +29,10 @@
     </div>
 </div>
 {% endfor %}
+
+<!--Recaptcha-->
+<form method="post">
+    {% csrf_token %}
+    {{ recaptcha_form.captcha }}     
+</form>
 {% endblock content %}

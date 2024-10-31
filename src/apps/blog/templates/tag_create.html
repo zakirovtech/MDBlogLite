@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p class="lead">Let`s create new custom tag</p>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="row-g3">
+        <div class="col-sm-7 mb-3">
+            {{ form.name }}
+            {% if form.errors %}
+            <div class="alert alert-danger">
+                {{ form.errors }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-outline-success">Save</button>
+</form>
+
+{% endblock content %}

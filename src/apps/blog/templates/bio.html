@@ -16,4 +16,9 @@
             </div>
         </div>
     </div>
+    <!--Recaptcha-->
+    <form method="post">
+        {% csrf_token %}
+        {{ recaptcha_form.captcha }}     
+    </form>
 {% endblock content %}
