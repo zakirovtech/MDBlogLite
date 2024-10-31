@@ -1,6 +1,6 @@
 # MDBlogLite
 
-**Stack**: Python, Django, PostgreSQL, Redis, Docker, Nginx
+**Stack**: Python, Django, PostgreSQL, Redis, Docker, Nginx, Celery
 
 MDBlogLite allows you to deploy a simple blog where posts can be created using Markdown or HTML.
 
@@ -63,3 +63,6 @@ CACHE_TIMEOUT=                   # Cache timeout in seconds
 
 SENTRY_STATUS=OFF                # Enable or disable Sentry error tracking (ON/OFF)
 SENTRY_DSN=                      # Sentry DSN for error tracking
+
+RECAPTCHA_SITEKEY=               # Your reCaptcha public sitekey
+RECAPTCHA_SECRET=                # Your reCaptcha secret key
