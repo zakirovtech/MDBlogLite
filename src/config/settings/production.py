@@ -21,7 +21,7 @@ DATABASES = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{config('CACHE_DOMAIN')}:{config('REDIS_PORT')}",
+        "LOCATION": f"redis://{config('CACHE_DOMAIN')}:{config('REDIS_PORT')}/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "pool_class": "redis.BlockingConnectionPool",
@@ -31,6 +31,7 @@ CACHES = {
 
 # CELERY
 CELERY_BROKER_URL = 'redis://cache:6379/0'
+CELERY_RESULT_BACKEND = 'redis://cache:6379/1'
 
 # CSRF
 CSRF_TRUSTED_ORIGINS = [
@@ -54,3 +55,7 @@ if SENTRY_STATUS:
             "continuous_profiling_auto_start": True,
         },
     )
+
+# RECAPTCHA
+RECAPTCHA_PUBLIC_KEY = config("RECAPTCHA_SITEKEY")
+RECAPTCHA_PRIVATE_KEY = config("RECAPTCHA_SECRET")

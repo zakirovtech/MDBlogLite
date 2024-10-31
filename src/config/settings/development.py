@@ -22,7 +22,7 @@ DATABASES = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://cache:6379",
+        "LOCATION": f"redis://cache:6379/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "pool_class": "redis.BlockingConnectionPool",
@@ -35,3 +35,6 @@ CELERY_BROKER_URL = 'redis://cache:6379/0'
 
 # SENTRY
 SENTRY_STATUS = False
+
+# RECAPTCHA
+SILENCED_SYSTEM_CHECKS = ['django_recaptcha.recaptcha_test_key_error']

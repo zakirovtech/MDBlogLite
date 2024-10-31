@@ -1,21 +1,24 @@
+import json
 import logging
+import os
 from typing import Any
 from urllib.parse import quote
 
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
+from django.db import IntegrityError
 from django.db.models import Count
 from django.db.models.query import QuerySet
 from django.forms import BaseModelForm
 from django.http import HttpRequest, Http404
-from django.http.response import HttpResponse
-from django.shortcuts import render, redirect
+from django.http.response import HttpResponse, JsonResponse
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views import generic, View
 
-from apps.blog.models import Bio, Post, Ip
-from apps.blog.forms import BioForm, PostForm
+from apps.blog.models import Bio, Ip, Post, Tag
+from apps.blog.forms import BioForm, PostForm, TagForm
 from apps.blog.utils import PostViewsCounterMixin, CommonContextMixin
 
 logger = logging.getLogger("blog")
@@ -25,14 +28,12 @@ class HomeView(CommonContextMixin, generic.TemplateView):
     template_name = "home.html"
     
     def get_queryset(self) -> QuerySet[Any]:
-        return Post.objects.filter(is_active=True).annotate(views=Count("ips")).prefetch_related("ips").order_by("-views")[:3]
+        return Post.objects.filter(is_active=True).prefetch_related("tags").annotate(views=Count("ips")).order_by("-views")[:3]
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update(self.get_common_context(title="Home"))
-
         object_list = self.get_queryset()
-        context.update({"most_viewed_posts": object_list})
+        context.update(self.get_common_context(title="Home", most_viewed_posts=object_list))
         return context
 
     
@@ -41,7 +42,7 @@ class SearchView(View):
         query = quote(request.GET.get('q'))
 
         if query:
-            google_search_url = f"https://www.google.com/search?q={settings.SITE_DOMAIN}: {query}"
+            google_search_url = f"https://www.google.com/search?q={query} site:{settings.SITE_DOMAIN}"
             return redirect(google_search_url)
         return redirect('/')
 
@@ -55,14 +56,21 @@ class PostListView(CommonContextMixin, generic.ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update(self.get_common_context(title="Blog"))
+        tags = Tag.objects.all()
+        context.update(self.get_common_context(title="Blog", tags=tags))
         return context
     
     def get_queryset(self) -> QuerySet[Any]:
         object_list = cache.get(self.cache_key)
+        tag = self.kwargs.get("tag")
+
         if object_list is None:
-            object_list = super().get_queryset().filter(is_active=True).annotate(views=Count("ips"))
+            object_list = super().get_queryset().filter(is_active=True).annotate(views=Count("ips")).prefetch_related("tags").order_by("-date_created")
             cache.set(self.cache_key, object_list, timeout=int(settings.CACHE_TIMEOUT))
+
+        if tag is not None:
+            return object_list.filter(tags__name=tag)
+
         return object_list
 
 class PostDetailView(PostViewsCounterMixin, CommonContextMixin, generic.DetailView):
@@ -111,7 +119,7 @@ class PostCreateView(CommonContextMixin, generic.CreateView):
     model = Post
     form_class = PostForm
     template_name = "post_create.html"
-
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(self.get_common_context(title="Create new post"))
@@ -120,8 +128,14 @@ class PostCreateView(CommonContextMixin, generic.CreateView):
     def form_valid(self, form: BaseModelForm) -> HttpResponse:
         post = form.save(commit=False)
         post.author = self.request.user
-        post.save()
-        return redirect("post-detail", id=post.id)
+        try:
+            post.save()
+            form.save_m2m()
+            return redirect("post-detail", id=post.id)
+        except Exception as e:
+            logger.error(f"Failed to create post: {e}")
+            form.add_error(None, "An error occurred while saving the post. Please try again.")
+            return self.form_invalid(form)
 
 
 class PostUpdateView(CommonContextMixin, generic.UpdateView):
@@ -151,6 +165,51 @@ class PostDeleteView(CommonContextMixin, generic.DeleteView):
         context = super().get_context_data(**kwargs)
         context.update(self.get_common_context(title="Delete current post"))
         return context
+
+
+class TagCreateView(CommonContextMixin, generic.CreateView):
+    model = Tag
+    form_class = TagForm
+    template_name = "tag_create.html"
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context.update(self.get_common_context(title="Create a new tag"))
+        return context
+
+    def form_valid(self, form: BaseModelForm) -> HttpResponse:
+        try:
+            super().form_valid(form)
+        except IntegrityError:
+            form.add_error("name", "Tag with this name is already exists")
+            return self.form_invalid(form)
+        return redirect("post-list")
+    
+    def form_invalid(self, form: BaseModelForm) -> HttpResponse:
+        # Here you can add additional context if needed
+        return self.render_to_response(self.get_context_data(form=form))
+
+
+class TagDeleteView(CommonContextMixin, View):
+    def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        if not request.user.is_authenticated:
+            raise PermissionDenied
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(self.get_common_context(title="Delete current tag"))
+        return context
+
+    def post(self, request, *args, **kwargs):
+        data = json.loads(request.body.decode('utf-8'))
+        tag_name = data.get("name")
+
+        if tag_name:
+            tag = get_object_or_404(Tag, name=tag_name)
+            tag.delete()
+            return JsonResponse({"status": "success"})
+        return JsonResponse({"status": "failed"})
 
 
 class BioShowView(CommonContextMixin, generic.TemplateView):

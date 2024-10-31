@@ -17,12 +17,27 @@ class DateModel(models.Model):
         abstract = True
 
 
+class Tag(DateModel):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+    
+    def get_absolute_url(self):
+        return reverse("post-list-by-tag", kwargs={"tag": self.name})
+    
+    def save(self, *args, **kwargs) -> None:
+        self.name = self.name.capitalize()
+        return super().save(*args, **kwargs)
+
+
 class Post(DateModel):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     header = models.CharField(max_length=128)
     body = models.TextField()
     image = models.ImageField(upload_to="posts", null=True, blank=True)
     ips = models.ManyToManyField("Ip", related_name="posts", blank=True)
+    tags = models.ManyToManyField(to=Tag, related_name="posts")
     is_active = models.BooleanField(default=True)
 
     def __str__(self) -> str:
@@ -41,7 +56,7 @@ class Post(DateModel):
         return cleaned_body
     
     def get_truncated_body(self):
-        truncated_markdown = markdown.markdown(self.body)[:300] + "..."
+        truncated_markdown = markdown.markdown(self.body)[:100] + "..."
         return mark_safe(bleach.clean(truncated_markdown, tags=settings.ALLOWED_TAGS, attributes=settings.ALLOWED_ATTRIBUTES))
 
     def get_absolute_url(self):

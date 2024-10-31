@@ -11,6 +11,9 @@ urlpatterns = [
     path("", include("apps.blog.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
+admin.site.site_header = f"{settings.BLOG_NAME}"
+admin.site.site_title = f"{settings.BLOG_NAME}"
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += [path("__debug__", include(debug_toolbar.urls))]
