@@ -84,6 +84,23 @@ services:
     networks:
       - backend
 
+  celery_worker:
+    restart: always
+    build: .
+    image: celery_worker
+    container_name: celery_worker
+    volumes:
+      - ./:/usr/app/src
+    env_file:
+      - ./env/.env
+    depends_on:
+      - db
+      - cache
+      - web
+    command: 'celery -A config worker -l info'
+    networks:
+      - backend
+
 volumes:
   postgres_data:
 
