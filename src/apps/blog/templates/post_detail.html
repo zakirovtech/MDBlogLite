@@ -6,7 +6,7 @@
         <h1 class="display-6">{{ post.header }}</h1>
         <div>
             <i class="bi bi-eye me-1"></i><span class="fw-lighter me-1">{{post.views}}</span>
-            <i class="bi bi-calendar me-2"></i><span class="fw-lighter me-1">Created on {{post.date_updated|date:"d F Y"}} at {{post.date_updated|time:"H:i"}}</span>
+            <i class="bi bi-calendar me-2"></i><span class="fw-lighter me-1">Created on {{post.date_created|date:"d F Y"}} at {{post.date_created|time:"H:i"}}</span>
             {% if request.user.is_authenticated%}
             <i class="bi bi-pencil me-1"></i><a class="link-dark" href="{{ post.get_update_url }}"><span class="fw-lighter me-1">Edit</span></a>
             <i class="bi bi-trash me-1"></i><a class="link-dark" href="{{ post.get_delete_url }}"><span class="fw-lighter me-1">Delete</span></a>
