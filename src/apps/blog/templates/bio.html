@@ -12,7 +12,7 @@
             <i class="bi bi-calendar me-2"></i><span class="fw-lighter me-1">Updated on {{bio.date_updated|date:"d F Y"}} at {{bio.date_updated|time:"H:i"}}</span>
             {% endif %}
             <div class="markdown-content">
-                <p>{{ bio.body|safe }}</p>
+                <p>{{ bio.get_body_as_html|safe }}</p>
             </div>
         </div>
     </div>

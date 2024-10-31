@@ -85,12 +85,23 @@ class Bio(DateModel):
     class Meta:
         verbose_name = "Bio"    
         verbose_name_plural = "Bios"
+    
+    def get_body_as_html(self):
+        html_body = markdown.markdown(self.body)
 
+        html_body = re.sub(
+        r'(<code.*?>)([\s\S]*?)(</code>)',
+        r'<pre>\1\2\3</pre>',
+        html_body
+        )
+        
+        cleaned_body = bleach.clean(html_body, tags=settings.ALLOWED_TAGS, attributes=settings.ALLOWED_ATTRIBUTES)
+        return cleaned_body
+    
     def save(self, *args, **kwargs):
         if not self.pk and Bio.objects.exists():
             raise ValueError("Only one Bio instance is allowed.")
 
-        self.body = bleach.clean(markdown.markdown(self.body), tags=settings.ALLOWED_TAGS, attributes=settings.ALLOWED_ATTRIBUTES)
         return super().save(*args, **kwargs)
 
     def __str__(self) -> str:
