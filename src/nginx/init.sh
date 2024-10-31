@@ -18,3 +18,12 @@ server {
     }
 }
 EOL
+
+# Validate the Nginx configuration
+if nginx -t; then
+    echo "Nginx configuration is valid."
+    nginx -s reload
+else
+    echo "Nginx configuration is invalid. Please check the configuration."
+    exit 1
+fi
