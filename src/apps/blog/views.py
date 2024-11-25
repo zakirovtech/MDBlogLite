@@ -358,7 +358,6 @@ class BioDownload(CommonContextMixin, generic.TemplateView):
                 file = open(file_path, 'rb')
                 response = FileResponse(file, as_attachment=True)
                 response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
-                response["X-Accel-Redirect"] = "bio"
                 return response
             except Exception as e:
                 raise Http404(f"Error while reading file: {str(e)}")
