@@ -1,3 +1,4 @@
+import base64
 import json
 import logging
 import os
@@ -11,7 +12,7 @@ from django.db import IntegrityError
 from django.db.models import Count
 from django.db.models.query import QuerySet
 from django.forms import BaseModelForm
-from django.http import HttpRequest, Http404
+from django.http import FileResponse, HttpRequest, Http404
 from django.http.response import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
@@ -19,7 +20,7 @@ from django.views import generic, View
 
 from apps.blog.models import Bio, Ip, Post, Tag
 from apps.blog.forms import BioForm, PostForm, TagForm
-from apps.blog.utils import PostViewsCounterMixin, CommonContextMixin
+from apps.blog.utils import PostViewsCounterMixin, CommonContextMixin, BioConvertMixin
 
 logger = logging.getLogger("blog")
 
@@ -33,7 +34,16 @@ class HomeView(CommonContextMixin, generic.TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         object_list = self.get_queryset()
-        context.update(self.get_common_context(title="Home", most_viewed_posts=object_list))
+        
+        # Temporary logic of banner viewing
+        if os.path.exists(os.path.join(settings.MEDIA_ROOT, "banner/banner.gif")):
+            with open(os.path.join(settings.MEDIA_ROOT, "banner/banner.gif"), "rb") as blob:
+                banner_data = base64.b64encode(blob.read()).decode('utf-8')
+                banner = f"data:image/gif;base64,{banner_data}"
+        else:
+            banner = None
+
+        context.update(self.get_common_context(title="Home", most_viewed_posts=object_list, banner=banner))
         return context
 
     
@@ -238,7 +248,7 @@ class BioShowView(CommonContextMixin, generic.TemplateView):
         return render(request, template_name=self.template_name, context=context)
     
 
-class BioInitView(CommonContextMixin, generic.TemplateView):
+class BioInitView(CommonContextMixin, BioConvertMixin, generic.TemplateView):
     template_name = "bio_init.html"
 
     def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
@@ -264,13 +274,16 @@ class BioInitView(CommonContextMixin, generic.TemplateView):
 
         if form.is_valid():
             form.save()
+
+            self.convert_md_to_pdf(request.POST["body"], logger)
+            
             return redirect('bio')
         
         context = self.get_context_data(form=form)
         return render(request, self.template_name, context=context)
     
 
-class BioUpdateView(CommonContextMixin, generic.TemplateView):
+class BioUpdateView(CommonContextMixin, BioConvertMixin, generic.TemplateView):
     template_name = "bio_update.html"
     
     def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
@@ -300,6 +313,9 @@ class BioUpdateView(CommonContextMixin, generic.TemplateView):
         
         if form.is_valid():
             form.save()
+
+            self.convert_md_to_pdf(request.POST["body"], logger)
+            
             return redirect('bio')
         
         return render(request, self.template_name, context=context)
@@ -320,3 +336,31 @@ class BioDeleteView(CommonContextMixin, generic.DeleteView):
         if bio is None:
             raise Http404("Bio not found")
         return bio
+
+
+class BioDownload(CommonContextMixin, generic.TemplateView):
+    template_name = "bio-download.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(self.get_common_context(title="Download PDF"))
+        return context
+    
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data()
+        return render(request, self.template_name, context=context)
+    
+    def post(self, request):
+        file_path = os.path.join(settings.MEDIA_ROOT, "pdf/cv.pdf")
+        
+        if os.path.exists(file_path):
+            try:
+                file = open(file_path, 'rb')
+                response = FileResponse(file, as_attachment=True)
+                response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+                response["X-Accel-Redirect"] = "bio"
+                return response
+            except Exception as e:
+                raise Http404(f"Error while reading file: {str(e)}")
+        else:
+            raise Http404("File not found.")

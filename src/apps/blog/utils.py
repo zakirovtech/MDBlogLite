@@ -1,4 +1,22 @@
+from logging import Logger
+import os
+
+import markdown
+from weasyprint import HTML
+
 from django.conf import settings
+
+
+class BioConvertMixin:
+    def convert_md_to_pdf(self, text: str, logger: Logger):
+        try:
+            html = markdown.markdown(text)
+            output_pdf_path = os.path.join(settings.MEDIA_ROOT, "pdf/cv.pdf")
+            HTML(string=html).write_pdf(output_pdf_path)
+        except Exception as e:
+            logger.error(f"Failed convert bio to PDF format with error: [{e}]")
+        else:
+            logger.info(f"Successfully create PDF bio in: [{output_pdf_path}]")
 
 
 class PostViewsCounterMixin:

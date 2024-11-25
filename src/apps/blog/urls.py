@@ -1,8 +1,8 @@
 from django.urls import path
-from apps.blog.views import ( 
-    HomeView, SearchView, BioShowView, BioInitView, BioUpdateView, BioDeleteView,
-    PostListView, PostDetailView, PostUpdateView, PostCreateView, PostDeleteView,
-    TagCreateView, TagDeleteView
+from apps.blog.views import (
+    HomeView, SearchView, BioShowView, BioInitView, BioUpdateView, BioDeleteView, BioDownload,
+    PostListView, PostDetailView, PostUpdateView, PostCreateView, PostDeleteView, TagCreateView,
+    TagDeleteView
 )
 
 urlpatterns = [
@@ -13,6 +13,7 @@ urlpatterns = [
     path("bio/init/", BioInitView.as_view(), name="bio-init"),
     path("bio/update/", BioUpdateView.as_view(), name="bio-update"),
     path("bio/delete/", BioDeleteView.as_view(), name="bio-delete"),
+    path("bio/download/", BioDownload.as_view(), name="bio-download"),
 
     path("tag/create/", TagCreateView.as_view(), name="tag-create"),
     path("tag/delete/", TagDeleteView.as_view(), name="tag-delete"),
