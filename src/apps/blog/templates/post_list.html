@@ -31,7 +31,7 @@
 {% for post in posts %}
 <div class="container-sm row justify-content-center">
     <div class="col-md-6 mt-3">
-        <a class="link-dark text-decoration-none" href="{{ post.get_absolute_url }}"><h2 class="display-6">{{post.header}}</h2></a>
+        <a class="link-dark text-decoration-none" href="{{ post.get_absolute_url }}"><h3>{{post.header}}</h2></a>
         <div>
             <i class="bi bi-eye me-1"></i><span class="fw-lighter me-1">{{post.views}}</span>
             <i class="bi bi-calendar me-2"></i>

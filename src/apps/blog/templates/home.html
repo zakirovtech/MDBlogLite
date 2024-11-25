@@ -3,10 +3,18 @@
 <title>{{ title }}</title>
 
 {% block content %}
+<!--Banner | Temporary logic-->
+<div class="container-sm row justify-content-center">
+    <div class="col-md-6 mt-3">
+        {% if banner %} <img src="{{ banner }}" alt="Banner" style="width: 610px; height: 250px;"> <hr>   {% endif%}
+    </div>
+    
+</div>
+
 {% for post in most_viewed_posts %}
 <div class="container-sm row justify-content-center">
     <div class="col-md-6 mt-3">
-        <a class="link-dark text-decoration-none" href="{{ post.get_absolute_url }}"><h2 class="display-6">{{post.header}}</h2></a>
+        <a class="link-dark text-decoration-none" href="{{ post.get_absolute_url }}"><h3>{{post.header}}</h2></a>
         <div>
             <i class="bi bi-eye me-1"></i><span class="fw-lighter me-1">{{post.views}}</span>
             <i class="bi bi-calendar me-2"></i><span class="fw-lighter me-1">Created on {{post.date_updated|date:"d F Y"}} at {{post.date_updated|time:"H:i"}}</span>
@@ -20,11 +28,6 @@
             <span class="me-1"><a class="link-light bg-secondary" href="{{tag.get_absolute_url}}"> &nbsp; {{tag.name}} &nbsp;</a></span>
             {% endfor %}
         </div>
-        <!--Markdown content-->
-        <div class="markdown-content">
-            <p class="font-monospace">{{post.get_truncated_body}}</p>
-        </div>
-        <a class="link-dark text-decoration-none" href="{{ post.get_absolute_url }}"><span class="font-monospace">Continue...</span></a>
         <hr>
     </div>
 </div>

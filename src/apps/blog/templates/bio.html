@@ -6,6 +6,7 @@
         <img src="{{ bio.image.url }}" class="img-thumbnail" alt="Avatar" style="width: 200px; height: auto; margin-right: 20px;">
         {% endif %}
         <div style="flex: 1; min-width: 200px;">
+            <i class="bi bi-download me-1"></i><a class="link-dark" href="{% url 'bio-download' %}"><span class="fw-lighter me-1">Download PDF</span></a>
             {% if request.user.is_authenticated%}
             <i class="bi bi-pencil me-1"></i><a class="link-dark" href="{% url 'bio-update' %}"><span class="fw-lighter me-1">Edit Bio</span></a>
             <i class="bi bi-trash me-1"></i><a class="link-dark" href="{% url 'bio-delete' %}"><span class="fw-lighter me-1">Delete Bio</span></a>
@@ -13,7 +14,7 @@
             {% endif %}
             <div class="markdown-content">
                 <p>{{ bio.get_body_as_html|safe }}</p>
-            </div>
+            </div>  
         </div>
     </div>
     <!--Recaptcha-->

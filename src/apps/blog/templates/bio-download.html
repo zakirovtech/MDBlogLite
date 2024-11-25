@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row-g3">
+    <form method="post" action="{% url 'bio-download'%}" id="download-form">
+        {% csrf_token %}
+        <p class="lead">Are you sure that you want to download bio?</p>
+        <input type="submit" class="btn btn-outline-success" id="download-button" value="Confirm">
+    </form>
+</div>
+<script>
+    const downloadForm = document.getElementById('download-form');
+    const downloadButton = document.getElementById('download-button');
+
+    downloadForm.addEventListener('submit', function() {
+        downloadButton.style.display = 'none';
+        
+        setTimeout(function() {
+            window.location.href = '{% url "bio" %}';
+        }, 500);
+    });
+</script>
+{% endblock content %}
