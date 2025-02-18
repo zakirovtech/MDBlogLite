@@ -1,6 +1,6 @@
 # MDBlogLite
 
-**Stack**: Python, Django, PostgreSQL, Redis, Docker, Nginx, Celery
+**Stack**: Python, Django, PostgreSQL, Redis, Docker, Nginx, Celery, flake8
 
 MDBlogLite allows you to deploy a simple blog where posts can be created using Markdown or HTML.
 

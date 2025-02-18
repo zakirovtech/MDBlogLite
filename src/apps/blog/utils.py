@@ -1,10 +1,9 @@
-from logging import Logger
 import os
+from logging import Logger
 
 import markdown
-from weasyprint import HTML
-
 from django.conf import settings
+from weasyprint import HTML
 
 
 class BioConvertMixin:
@@ -21,15 +20,15 @@ class BioConvertMixin:
 
 class PostViewsCounterMixin:
     def get_client_address(self, request):
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
         if x_forwarded_for:
-            return x_forwarded_for.split(',')[0]
-        return request.META.get('REMOTE_ADDR')
+            return x_forwarded_for.split(",")[0]
+        return request.META.get("REMOTE_ADDR")
 
 
 class CommonContextMixin:
     def get_common_context(self, *args, **kwargs):
-        context = {"blogname": settings.BLOG_NAME} 
+        context = {"blogname": settings.BLOG_NAME}
         if args:
             context.update({"extra_args": args})
         if kwargs:

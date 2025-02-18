@@ -1,5 +1,6 @@
-from config.settings.base import *
 import sentry_sdk
+
+from config.settings.base import *
 
 DEBUG = True
 
@@ -12,9 +13,9 @@ ADMIN_ENTRYPOINT = "admin/"
 
 # DATABASES
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3'
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
 
@@ -26,15 +27,15 @@ CACHES = {
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "pool_class": "redis.BlockingConnectionPool",
-        }
+        },
     }
 }
 
 # CELERY
-CELERY_BROKER_URL = 'redis://cache:6379/0'
+CELERY_BROKER_URL = "redis://cache:6379/0"
 
 # SENTRY
 SENTRY_STATUS = False
 
 # RECAPTCHA
-SILENCED_SYSTEM_CHECKS = ['django_recaptcha.recaptcha_test_key_error']
+SILENCED_SYSTEM_CHECKS = ["django_recaptcha.recaptcha_test_key_error"]

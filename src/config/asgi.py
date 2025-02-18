@@ -13,9 +13,13 @@ from django.core.asgi import get_asgi_application
 
 from config.settings.base import config
 
-if config('DJANGO_ENV') == 'production':
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.production')
+if config("DJANGO_ENV") == "production":
+    os.environ.setdefault(
+        "DJANGO_SETTINGS_MODULE", "config.settings.production"
+    )
 else:
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.development')
+    os.environ.setdefault(
+        "DJANGO_SETTINGS_MODULE", "config.settings.development"
+    )
 
 application = get_asgi_application()
