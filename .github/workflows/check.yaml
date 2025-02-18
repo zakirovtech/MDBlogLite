@@ -1,0 +1,41 @@
+name: Check source code
+on: push
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone the repo
+        uses: actions/checkout@v3
+
+      - name: Install Python 3.13
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install -r ./src/requirements.txt
+
+      - name: Run black and fix basic style issues
+        run: |
+          black ./src
+          black --check ./src
+
+      - name: Run isort and sort imports
+        run: |
+          isort ./src
+          isort --check ./src
+
+      - name: Run flake8 and check for PEP8 compliance
+        run: |
+          flake8 ./src
