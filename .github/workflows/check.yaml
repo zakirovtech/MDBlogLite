@@ -28,14 +28,17 @@ jobs:
 
       - name: Run black and fix basic style issues
         run: |
+          source .venv/bin/activate
           black ./src
           black --check ./src
 
       - name: Run isort and sort imports
         run: |
+          source .venv/bin/activate
           isort ./src
           isort --check ./src
 
       - name: Run flake8 and check for PEP8 compliance
         run: |
+          source .venv/bin/activate
           flake8 ./src
