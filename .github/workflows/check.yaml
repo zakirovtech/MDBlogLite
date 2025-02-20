@@ -1,0 +1,51 @@
+# This workflow will run on every push to the each feature branch and check
+# for style and dependencies issues
+
+name: Check source code
+on:
+  push:
+    branches-ignore:
+      - "develop"
+      - "main"
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone the repo
+        uses: actions/checkout@v3
+
+      - name: Install Python 3.13
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install -r ./src/requirements.txt
+
+      - name: Run black and fix basic style issues
+        run: |
+          source .venv/bin/activate
+          black ./src
+          black --check ./src
+
+      - name: Run isort and sort imports
+        run: |
+          source .venv/bin/activate
+          isort ./src
+          isort --check ./src
+
+      - name: Run flake8 and check for PEP8 compliance
+        run: |
+          source .venv/bin/activate
+          flake8 ./src

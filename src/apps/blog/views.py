@@ -12,49 +12,66 @@ from django.db import IntegrityError
 from django.db.models import Count
 from django.db.models.query import QuerySet
 from django.forms import BaseModelForm
-from django.http import FileResponse, HttpRequest, Http404
+from django.http import FileResponse, Http404, HttpRequest
 from django.http.response import HttpResponse, JsonResponse
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
-from django.views import generic, View
+from django.views import View, generic
 
-from apps.blog.models import Bio, Ip, Post, Tag
 from apps.blog.forms import BioForm, PostForm, TagForm
-from apps.blog.utils import PostViewsCounterMixin, CommonContextMixin, BioConvertMixin
+from apps.blog.models import Bio, Ip, Post, Tag
+from apps.blog.utils import (
+    BioConvertMixin,
+    CommonContextMixin,
+    PostViewsCounterMixin,
+)
 
 logger = logging.getLogger("blog")
 
 
 class HomeView(CommonContextMixin, generic.TemplateView):
     template_name = "home.html"
-    
+
     def get_queryset(self) -> QuerySet[Any]:
-        return Post.objects.filter(is_active=True).prefetch_related("tags").annotate(views=Count("ips")).order_by("-views")[:3]
-    
+        return (
+            Post.objects.filter(is_active=True)
+            .prefetch_related("tags")
+            .annotate(views=Count("ips"))
+            .order_by("-views")[:3]
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         object_list = self.get_queryset()
-        
+
         # Temporary logic of banner viewing
-        if os.path.exists(os.path.join(settings.MEDIA_ROOT, "banner/banner.gif")):
-            with open(os.path.join(settings.MEDIA_ROOT, "banner/banner.gif"), "rb") as blob:
-                banner_data = base64.b64encode(blob.read()).decode('utf-8')
+        if os.path.exists(
+            os.path.join(settings.MEDIA_ROOT, "banner/banner.gif")
+        ):
+            with open(
+                os.path.join(settings.MEDIA_ROOT, "banner/banner.gif"), "rb"
+            ) as blob:
+                banner_data = base64.b64encode(blob.read()).decode("utf-8")
                 banner = f"data:image/gif;base64,{banner_data}"
         else:
             banner = None
 
-        context.update(self.get_common_context(title="Home", most_viewed_posts=object_list, banner=banner))
+        context.update(
+            self.get_common_context(
+                title="Home", most_viewed_posts=object_list, banner=banner
+            )
+        )
         return context
 
-    
+
 class SearchView(View):
     def get(self, request, *args, **kwargs):
-        query = quote(request.GET.get('q'))
+        query = quote(request.GET.get("q"))
 
         if query:
             google_search_url = f"https://www.google.com/search?q={query} site:{settings.SITE_DOMAIN}"
             return redirect(google_search_url)
-        return redirect('/')
+        return redirect("/")
 
 
 class PostListView(CommonContextMixin, generic.ListView):
@@ -69,21 +86,35 @@ class PostListView(CommonContextMixin, generic.ListView):
         tags = Tag.objects.all()
         context.update(self.get_common_context(title="Blog", tags=tags))
         return context
-    
+
     def get_queryset(self) -> QuerySet[Any]:
         object_list = cache.get(self.cache_key)
         tag = self.kwargs.get("tag")
 
         if object_list is None:
-            object_list = super().get_queryset().filter(is_active=True).annotate(views=Count("ips")).prefetch_related("tags").order_by("-date_created")
-            cache.set(self.cache_key, object_list, timeout=int(settings.CACHE_TIMEOUT))
+            object_list = (
+                super()
+                .get_queryset()
+                .filter(is_active=True)
+                .annotate(views=Count("ips"))
+                .prefetch_related("tags")
+                .order_by("-date_created")
+            )
+            cache.set(
+                self.cache_key,
+                object_list,
+                timeout=int(settings.CACHE_TIMEOUT),
+            )
 
         if tag is not None:
             return object_list.filter(tags__name=tag)
 
         return object_list
 
-class PostDetailView(PostViewsCounterMixin, CommonContextMixin, generic.DetailView):
+
+class PostDetailView(
+    PostViewsCounterMixin, CommonContextMixin, generic.DetailView
+):
     model = Post
     template_name = "post_detail.html"
     pk_url_kwarg = "id"
@@ -93,10 +124,10 @@ class PostDetailView(PostViewsCounterMixin, CommonContextMixin, generic.DetailVi
         context = super().get_context_data(**kwargs)
         context.update(self.get_common_context())
         return context
-    
+
     def set_cache_key(self):
         return f"post_{self.kwargs.get('id')}_detail_cache"
-    
+
     def track_unique_view(self, request):
         address = self.get_client_address(request=request)
         ip, _ = Ip.objects.get_or_create(ip=address)
@@ -106,18 +137,20 @@ class PostDetailView(PostViewsCounterMixin, CommonContextMixin, generic.DetailVi
 
     def get_queryset(self):
         return super().get_queryset().annotate(views=Count("ips"))
-    
+
     def get(self, request, *args, **kwargs):
         cache_key = self.set_cache_key()
         self.object = cache.get(cache_key)
-        
+
         if self.object is None:
             queryset = self.get_queryset()
             self.object = self.get_object(queryset)
-        
+
             self.track_unique_view(request)
-            
-            cache.set(cache_key, self.object, timeout=int(settings.CACHE_TIMEOUT))
+
+            cache.set(
+                cache_key, self.object, timeout=int(settings.CACHE_TIMEOUT)
+            )
         else:
             self.track_unique_view(request)
 
@@ -129,7 +162,7 @@ class PostCreateView(CommonContextMixin, generic.CreateView):
     model = Post
     form_class = PostForm
     template_name = "post_create.html"
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(self.get_common_context(title="Create new post"))
@@ -144,7 +177,10 @@ class PostCreateView(CommonContextMixin, generic.CreateView):
             return redirect("post-detail", id=post.id)
         except Exception as e:
             logger.error(f"Failed to create post: {e}")
-            form.add_error(None, "An error occurred while saving the post. Please try again.")
+            form.add_error(
+                None,
+                "An error occurred while saving the post. Please try again.",
+            )
             return self.form_invalid(form)
 
 
@@ -159,11 +195,13 @@ class PostUpdateView(CommonContextMixin, generic.UpdateView):
         context.update(self.get_common_context(title="Update current post"))
         return context
 
-    def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+    def dispatch(
+        self, request: HttpRequest, *args: Any, **kwargs: Any
+    ) -> HttpResponse:
         if not request.user.is_authenticated:
             raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)
-    
+
 
 class PostDeleteView(CommonContextMixin, generic.DeleteView):
     model = Post
@@ -194,14 +232,16 @@ class TagCreateView(CommonContextMixin, generic.CreateView):
             form.add_error("name", "Tag with this name is already exists")
             return self.form_invalid(form)
         return redirect("post-list")
-    
+
     def form_invalid(self, form: BaseModelForm) -> HttpResponse:
         # Here you can add additional context if needed
         return self.render_to_response(self.get_context_data(form=form))
 
 
 class TagDeleteView(CommonContextMixin, View):
-    def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+    def dispatch(
+        self, request: HttpRequest, *args: Any, **kwargs: Any
+    ) -> HttpResponse:
         if not request.user.is_authenticated:
             raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)
@@ -212,7 +252,7 @@ class TagDeleteView(CommonContextMixin, View):
         return context
 
     def post(self, request, *args, **kwargs):
-        data = json.loads(request.body.decode('utf-8'))
+        data = json.loads(request.body.decode("utf-8"))
         tag_name = data.get("name")
 
         if tag_name:
@@ -226,16 +266,18 @@ class BioShowView(CommonContextMixin, generic.TemplateView):
     template_name = "bio.html"
     cache_key = "bio_show_cache"
 
-    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+    def get(
+        self, request: HttpRequest, *args: Any, **kwargs: Any
+    ) -> HttpResponse:
         cached_bio = cache.get(self.cache_key)
         if cached_bio:
             bio = cached_bio
             logger.info("Bio object fetched from cache.")
         else:
             bio = Bio.objects.first()
-            if not bio: # First start, for example
+            if not bio:  # First start, for example
                 if request.user.is_authenticated:
-                    return redirect('bio-init')
+                    return redirect("bio-init")
                 else:
                     raise Http404("Author has not created a bio yet")
 
@@ -245,30 +287,33 @@ class BioShowView(CommonContextMixin, generic.TemplateView):
         context = self.get_context_data(title="About me", bio=bio)
         context.update(self.get_common_context())
 
-        return render(request, template_name=self.template_name, context=context)
-    
+        return render(
+            request, template_name=self.template_name, context=context
+        )
+
 
 class BioInitView(CommonContextMixin, BioConvertMixin, generic.TemplateView):
     template_name = "bio_init.html"
 
-    def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+    def dispatch(
+        self, request: HttpRequest, *args: Any, **kwargs: Any
+    ) -> HttpResponse:
         if not request.user.is_authenticated:
             raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update({
-            "title": "Create your bio",
-            "form": kwargs.get("form", BioForm())
-        })
+        context.update(
+            {"title": "Create your bio", "form": kwargs.get("form", BioForm())}
+        )
         context.update(self.get_common_context())
         return context
-    
+
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any):
         context = self.get_context_data()
         return render(request, self.template_name, context=context)
-    
+
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any):
         form = BioForm(request.POST, request.FILES)
 
@@ -276,33 +321,33 @@ class BioInitView(CommonContextMixin, BioConvertMixin, generic.TemplateView):
             form.save()
 
             self.convert_md_to_pdf(request.POST["body"], logger)
-            
-            return redirect('bio')
-        
+
+            return redirect("bio")
+
         context = self.get_context_data(form=form)
         return render(request, self.template_name, context=context)
-    
+
 
 class BioUpdateView(CommonContextMixin, BioConvertMixin, generic.TemplateView):
     template_name = "bio_update.html"
-    
-    def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+
+    def dispatch(
+        self, request: HttpRequest, *args: Any, **kwargs: Any
+    ) -> HttpResponse:
         if not request.user.is_authenticated:
             raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update({
-            "title": "Upadate your bio"
-        })
+        context.update({"title": "Upadate your bio"})
         context.update(self.get_common_context())
         return context
 
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any):
         obj = Bio.objects.first()
         form = BioForm(instance=obj)
-        
+
         context = self.get_context_data(form=form)
         return render(request, self.template_name, context=context)
 
@@ -310,14 +355,14 @@ class BioUpdateView(CommonContextMixin, BioConvertMixin, generic.TemplateView):
         obj = Bio.objects.first()
         form = BioForm(request.POST, request.FILES, instance=obj)
         context = self.get_context_data(form=form)
-        
+
         if form.is_valid():
             form.save()
 
             self.convert_md_to_pdf(request.POST["body"], logger)
-            
-            return redirect('bio')
-        
+
+            return redirect("bio")
+
         return render(request, self.template_name, context=context)
 
 
@@ -330,7 +375,7 @@ class BioDeleteView(CommonContextMixin, generic.DeleteView):
         context = super().get_context_data(**kwargs)
         context.update(self.get_common_context(title="Delete bio"))
         return context
-    
+
     def get_object(self, queryset=None):
         bio = Bio.objects.first()
         if bio is None:
@@ -345,19 +390,21 @@ class BioDownload(CommonContextMixin, generic.TemplateView):
         context = super().get_context_data(**kwargs)
         context.update(self.get_common_context(title="Download PDF"))
         return context
-    
+
     def get(self, request, *args, **kwargs):
         context = self.get_context_data()
         return render(request, self.template_name, context=context)
-    
+
     def post(self, request):
         file_path = os.path.join(settings.MEDIA_ROOT, "pdf/cv.pdf")
-        
+
         if os.path.exists(file_path):
             try:
-                file = open(file_path, 'rb')
+                file = open(file_path, "rb")
                 response = FileResponse(file, as_attachment=True)
-                response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+                response["Content-Disposition"] = (
+                    f'attachment; filename="{os.path.basename(file_path)}"'
+                )
                 return response
             except Exception as e:
                 raise Http404(f"Error while reading file: {str(e)}")

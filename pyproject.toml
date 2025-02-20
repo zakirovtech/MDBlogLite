@@ -1,0 +1,33 @@
+[tool.black]
+line-length = 79
+exclude = '''
+/(
+    migrations
+    | env
+    | media
+    | certbot
+    | nginx
+    | .pytest_cache
+    | __pycache__
+    | static
+    | templates
+    | scripts
+    | redis
+    | \.yaml$
+    | \.yml$
+    | \.toml$
+    | Dockerfile
+    | Makefile
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 79
+known_third_party = [
+    "django", "bleach", "markdown",
+    "weasyprint", "celery", "sentry-sdk"
+]
+
+skip = ["migrations", "__pycache__"]
+

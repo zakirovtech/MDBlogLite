@@ -1,0 +1,15 @@
+# This workflow will run on every push to the develop branch and run some 
+# basic tests until it deploys to the development server. 
+# UPD: The testd runnning logic have not added yet.
+
+name: Basic tests and deploy to development
+on:
+  push:
+    branches:
+      - "develop"
+jobs:
+    test_1:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Some step
+              run: echo "Test_1 step will be here later"

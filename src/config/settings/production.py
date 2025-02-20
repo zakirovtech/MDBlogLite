@@ -7,13 +7,13 @@ ALLOWED_HOSTS = config("ALLOWED_HOSTS", cast=Csv())
 # DATABASES
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config("POSTGRES_DB"),
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": config("POSTGRES_DB"),
         "USER": config("POSTGRES_USER"),
         "PASSWORD": config("POSTGRES_PASSWORD"),
         "HOST": config("DB_HOST"),
-        "PORT": config("DB_PORT")
+        "PORT": config("DB_PORT"),
     }
 }
 
@@ -25,19 +25,19 @@ CACHES = {
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "pool_class": "redis.BlockingConnectionPool",
-        }
+        },
     }
 }
 
 # CELERY
-CELERY_BROKER_URL = 'redis://cache:6379/0'
-CELERY_RESULT_BACKEND = 'redis://cache:6379/1'
+CELERY_BROKER_URL = "redis://cache:6379/0"
+CELERY_RESULT_BACKEND = "redis://cache:6379/1"
 
 # CSRF
 CSRF_TRUSTED_ORIGINS = [
     f"https://{config('SITE_DOMAIN')}",
     f"https://www.{config('SITE_DOMAIN')}",
-    "https://127.0.0.1"
+    "https://127.0.0.1",
 ]
 
 # SENTRY

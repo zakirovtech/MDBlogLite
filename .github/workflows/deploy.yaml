@@ -1,0 +1,53 @@
+# This workflow will run on every push to the main branch
+# and deploy the changes to the production server.
+# Then web applicaton container restarts.
+# UPD: If it is needed, the web container will be rebuilded.
+
+name: Deploy changes to production
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: self-hosted
+    env:
+      REBUILD_NEEDED: false
+    steps:
+      - name: Check rebuild needed
+        run: |
+          cd ${{ secrets.PROJECT_REMOTE_PATH }}
+          CHANGED_FILES=$(git diff --name-only origin/main..HEAD)
+
+          if echo "$CHANGED_FILES" | grep -qE 'requirements.txt|Dockerfile|docker-compose-production.yaml'; then
+          echo "REBUILD_NEEDED=true" >> $GITHUB_ENV
+          else
+          echo "REBUILD_NEEDED=false" >> $GITHUB_ENV
+          fi
+
+      - name: Pull changes
+        run: |
+          echo "Pull is starting"
+          cd ${{ secrets.PROJECT_REMOTE_PATH }}
+          git pull origin main
+          echo "Pull is done"
+
+      - name: Stop running web container
+        run: |
+          cd ${{ secrets.PROJECT_REMOTE_PATH }}
+          cd src
+          docker compose -f docker-compose-production.yaml stop web
+
+      - name: Rebuild container if it is needed
+        if: env.REBUILD_NEEDED == 'true'
+        run: |
+          cd ${{ secrets.PROJECT_REMOTE_PATH }}
+          cd src
+          docker compose -f docker-compose-production.yaml up --build -d --no-deps web
+      
+      - name: Only restart web container if rebuild not needed
+        if: ${{ env.REBUILD_NEEDED == 'false' }}
+        run: |
+          cd ${{ secrets.PROJECT_REMOTE_PATH }}
+          cd src
+          docker compose -f docker-compose-production.yaml restart web
