@@ -1,3 +1,6 @@
+# This workflow will run on every push to the each feature branch and check
+# for style and dependencies issues
+
 name: Check source code
 on:
   push:
