@@ -85,3 +85,6 @@ venv/
 
 # VS Code
 .vscode/
+
+# Certificates
+certbot/
