@@ -1,6 +1,7 @@
 from django.urls import path
 
 from apps.blog.views import (
+    AchievementsListView,
     BioDeleteView,
     BioDownload,
     BioInitView,
@@ -39,4 +40,5 @@ urlpatterns = [
     path(
         "posts/delete/<int:id>/", PostDeleteView.as_view(), name="post-delete"
     ),
+    path("achievements/", AchievementsListView.as_view(), name="achievements-list"),
 ]

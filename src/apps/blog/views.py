@@ -29,6 +29,38 @@ from apps.blog.utils import (
 logger = logging.getLogger("blog")
 
 
+class AchievementsListView(CommonContextMixin, generic.TemplateView):
+    template_name = "achievements_list.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Temporary logic of achievements viewing
+        if os.path.exists(
+            os.path.join(
+                settings.MEDIA_ROOT, 
+                "achievements/rookie-cisco-zakirov-kh-image.png"
+                )
+        ):
+            with open(
+                os.path.join(
+                    settings.MEDIA_ROOT,
+                    "achievements/rookie-cisco-zakirov-kh-image.png"
+                    ), "rb"
+            ) as blob:
+                achievement_data = base64.b64encode(blob.read()).decode("utf-8")
+                achievement = f"data:image/gif;base64,{achievement_data}"
+        else:
+            achievement = None
+
+        context.update(
+            self.get_common_context(
+                title="Achievements", achievement=achievement
+            )
+        )
+        return context
+
+
 class HomeView(CommonContextMixin, generic.TemplateView):
     template_name = "home.html"
 
