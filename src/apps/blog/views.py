@@ -18,8 +18,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views import View, generic
 
-from apps.blog.forms import BioForm, PostForm, TagForm
-from apps.blog.models import Bio, Ip, Post, Tag
+from apps.blog.forms import AchievementForm, BioForm, PostForm, TagForm
+from apps.blog.models import Achievement, Bio, Ip, Post, Tag
 from apps.blog.utils import (
     BioConvertMixin,
     CommonContextMixin,
@@ -27,6 +27,89 @@ from apps.blog.utils import (
 )
 
 logger = logging.getLogger("blog")
+
+
+class AchievementListView(CommonContextMixin, generic.ListView):
+    model = Achievement
+    template_name = "achievement_list.html"
+    context_object_name = "achievements"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(self.get_common_context(title="Achievements"))
+        return context
+
+
+class AchievementDetailView(CommonContextMixin, generic.DeleteView):
+    model = Achievement
+    template_name = "achievement_detail.html"
+    pk_url_kwarg = "id"
+    context_object_name = "ach"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            self.get_common_context(title=f"{context['ach'].header}")
+        )
+        return context
+
+
+class AchievementUpdateView(CommonContextMixin, generic.UpdateView):
+    model = Achievement
+    form_class = AchievementForm
+    pk_url_kwarg = "id"
+    template_name = "achievement_update.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(self.get_common_context(title="Edit achievement"))
+        return context
+
+    def dispatch(
+        self, request: HttpRequest, *args: Any, **kwargs: Any
+    ) -> HttpResponse:
+        if not request.user.is_authenticated:
+            raise PermissionDenied
+        return super().dispatch(request, *args, **kwargs)
+
+
+class AchievementCreateView(CommonContextMixin, generic.CreateView):
+    model = Achievement
+    form_class = AchievementForm
+    template_name = "achievement_create.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(self.get_common_context(title="Add new achievement"))
+        return context
+
+    def form_valid(self, form: BaseModelForm) -> HttpResponse:
+        ach = form.save(commit=False)
+
+        try:
+            ach.save()
+            return redirect("achievements-detail", id=ach.id)
+        except Exception as e:
+            logger.error(f"Failed to add achievement: {e}")
+            form.add_error(
+                None,
+                "An error occurred while saving the achievement. Please try again.",
+            )
+            return self.form_invalid(form)
+
+
+class AchievementDeleteView(CommonContextMixin, generic.DeleteView):
+    model = Achievement
+    template_name = "achievement_delete.html"
+    success_url = reverse_lazy("achievements-list")
+    pk_url_kwarg = "id"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            self.get_common_context(title="Delete current achievement")
+        )
+        return context
 
 
 class HomeView(CommonContextMixin, generic.TemplateView):

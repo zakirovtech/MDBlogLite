@@ -1,6 +1,11 @@
 from django.urls import path
 
 from apps.blog.views import (
+    AchievementCreateView,
+    AchievementDeleteView,
+    AchievementDetailView,
+    AchievementListView,
+    AchievementUpdateView,
     BioDeleteView,
     BioDownload,
     BioInitView,
@@ -38,5 +43,30 @@ urlpatterns = [
     ),
     path(
         "posts/delete/<int:id>/", PostDeleteView.as_view(), name="post-delete"
+    ),
+    path(
+        "achievements/",
+        AchievementListView.as_view(),
+        name="achievements-list",
+    ),
+    path(
+        "achievements/<int:id>/",
+        AchievementDetailView.as_view(),
+        name="achievements-detail",
+    ),
+    path(
+        "achievements/create/",
+        AchievementCreateView.as_view(),
+        name="achievements-create",
+    ),
+    path(
+        "achievements/update/<int:id>/",
+        AchievementUpdateView.as_view(),
+        name="achievements-update",
+    ),
+    path(
+        "achievements/delete/<int:id>",
+        AchievementDeleteView.as_view(),
+        name="achievements-delete",
     ),
 ]

@@ -1,47 +1,34 @@
 {% extends "base.html" %}
 
+<title>{{ title }}</title>
+
+
 {% block content %}
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="row-g3">
-        <div id="contentHelpBlock" class="form-text">
-            You can choose already existing tags 
-        </div>
-
-        {% for tag in form.tags %}
-        <div class="form-check form-check-inline">
-            {{ tag }}
-            <a class="link-dark" 
-            href="#" 
-            data-url="{% url 'tag-delete' %}" 
-            onclick="deleteTag(this, '{{ tag.choice_label }}')">
-                <i class="bi bi-trash"></i>
-            </a>
-        </div>
-        {% endfor %}
-        
         <div class="col-auto">
             <span id="headerHelpInline" class="form-text">
               Header must be 1-128 characters long.
             </span>
-          </div>
+        </div>
         <div class="col-sm-4 mb-3">
             {{ form.header }}
         </div>
         <div id="contentHelpBlock" class="form-text">
-            Use markdown syntax changing post
+            You can add a description of your achievement
         </div>
         <div class="col-sm-8 mb-3">
             {{ form.body }}
         </div>
         <div id="contentHelpBlock" class="form-text">
-            You can add an image to you post
+            You can add an image to you achievement
         </div>
         <div class="col-sm-4 mb-3">
             {{ form.image }}
         </div>
         <div id="contentHelpBlock" class="form-text">
-            Is the post active? You can hide the post's visibility here. But be careful: to make the post visible again, you'll need to visit the admin panel.
+            Is the achievement active? You can hide the achievement's visibility here. But be careful: to make the achievement visible again, you'll need to visit the admin panel.
         </div>
         <div class="col-sm-7 mb-3">
             {{ form.is_active }}
@@ -49,4 +36,4 @@
     </div>
     <button type="submit" class="btn btn-outline-success">Save changes</button>
 </form>
-{% endblock %}
+{% endblock content %}

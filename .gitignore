@@ -167,6 +167,7 @@ cython_debug/
 */media/posts/
 */media/banner/
 */media/pdf/
+*/media/achievements/
 
 # Static files
 */static/
