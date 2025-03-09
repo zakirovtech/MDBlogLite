@@ -17,6 +17,33 @@ class DateModel(models.Model):
         abstract = True
 
 
+class Achievement(DateModel):
+    header = models.CharField(max_length=128)
+    body = models.TextField()
+    image = models.ImageField(
+        upload_to="achievements",
+        null=True,
+        blank=True,
+    )
+    is_active = models.BooleanField(default=True)
+
+    def get_absolute_url(self):
+        return reverse("achievements-detail", kwargs={"id": str(self.id)})
+
+    def get_update_url(self):
+        return reverse("achievements-update", kwargs={"id": str(self.id)})
+
+    def get_delete_url(self):
+        return reverse("achievements-delete", kwargs={"id": str(self.id)})
+
+    def __str__(self):
+        return self.header
+
+    class Meta:
+        verbose_name = "Achievement"
+        verbose_name_plural = "Achievements"
+
+
 class Tag(DateModel):
     name = models.CharField(max_length=50, unique=True)
 
