@@ -12,7 +12,7 @@ logger = logging.getLogger("blog")
 
 
 @receiver(post_delete, sender=Achievement)
-def delete_image_file(sender, instance, **kwargs):
+def delete_image_file_ach(sender, instance, **kwargs):
     if instance.image:
         if os.path.isfile(instance.image.path):
             os.remove(instance.image.path)
@@ -80,7 +80,7 @@ def clear_post_cache_on_delete(sender, instance, **kwargs):
 
 
 @receiver(post_delete, sender=Post)
-def delete_image_file(sender, instance, **kwargs):
+def delete_image_file_post(sender, instance, **kwargs):
     if instance.image:
         if os.path.isfile(instance.image.path):
             os.remove(instance.image.path)
