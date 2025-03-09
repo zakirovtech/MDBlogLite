@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+<title>{{blogname}} | {{title}}</title>
+
+{% block content %}
+{% if request.user.is_authenticated %}
+<div class="container-sm row justify-content-center">
+    <div class="col-md-6 mt-3">
+        <p class="lead">It seems you have rights to click here: 
+            <a class="nav-link" href="{% url 'achievements-create' %}"><i class="bi bi-plus"></i></a>
+        </p>
+    </div>    
+</div>
+{% endif %}
+
+{% if not achievements %}
+<div class="container-sm row justify-content-center">
+    <div class="col-md-6 mt-3">
+        <p class="lead">Author does not have any achievements yet...</p>
+    </div>
+</div>
+
+{% else %}
+{% for ach in achievements %}
+<div class="container-sm row justify-content-center">
+    <div class="col-md-6 mt-3">
+        <a class="link-dark text-decoration-none" href="{{ ach.get_absolute_url }}"><h3>{{ach.header}}</h2></a>
+        <div>
+            <i class="bi bi-calendar me-2"></i>
+            <span class="fw-lighter me-1">Created on {{ ach.date_created|date:"d F Y" }} at {{ ach.date_created|time:"H:i" }}</span>
+            {% if request.user.is_authenticated%}
+            <i class="bi bi-pencil me-1"></i><a class="link-dark" href="{{ ach.get_update_url }}"><span class="fw-lighter me-1">Edit</span></a>
+            <i class="bi bi-trash me-1"></i><a class="link-dark" href="{{ ach.get_delete_url }}"><span class="fw-lighter me-1">Delete</span></a>
+            {% endif %}
+            <br>
+        </div>
+        <div class="content">
+            <p class="font-monospace">{{ach.body}}</p>
+        </div>
+        <a class="link-dark text-decoration-none" href="{{ ach.get_absolute_url }}"><span class="font-monospace">See more...</span></a>
+        <hr>
+    </div>
+    
+</div>
+{% endfor %}
+{% endif %}
+{% endblock content %}
