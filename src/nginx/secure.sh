@@ -10,6 +10,25 @@ cat <<EOL > $NGINX_CONFIG
 server {
     listen 80;
     listen [::]:80;
+    server_name _;
+    
+    return 444;
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name _;
+
+    ssl_certificate /etc/nginx/ssl/live/$SITE_DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/live/$SITE_DOMAIN/privkey.pem;
+
+    return 444;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
     server_name $SITE_DOMAIN www.$SITE_DOMAIN;
 
     location /.well-known/acme-challenge/ {
@@ -23,7 +42,7 @@ server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
 
-    server_name $SITE_DOMAIN;
+    server_name $SITE_DOMAIN www.$SITE_DOMAIN;
 
     ssl_certificate /etc/nginx/ssl/live/$SITE_DOMAIN/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/live/$SITE_DOMAIN/privkey.pem;
