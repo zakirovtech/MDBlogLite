@@ -26,6 +26,11 @@ ADMIN_PASSWORD = config("ADMIN_PASSWORD")
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config("SECRET_KEY")
 
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesBackend",
+    "django.contrib.auth.backends.ModelBackend",  # Default
+]
+
 # Application definition
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -36,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_recaptcha",
     "apps.blog.apps.BlogConfig",
+    "axes",
 ]
 
 MIDDLEWARE = [
@@ -47,6 +53,7 @@ MIDDLEWARE = [
     "apps.blog.middleware.ratelimit.RateLimitMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "axes.middleware.AxesMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -170,10 +177,12 @@ LOGGING = {
         },
     },
     "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
+        "console": {"class": "logging.StreamHandler", "formatter": "verbose"},
+        "file": {
+            "class": "logging.FileHandler",
             "formatter": "verbose",
-        }
+            "filename": f"{BASE_DIR}/logs/login_activity.log",
+        },
     },
     "loggers": {
         "django": {
@@ -186,13 +195,21 @@ LOGGING = {
             "level": "DEBUG",
             "propagate": False,
         },
+        "login": {"handlers": ["file"], "level": "DEBUG", "propagate": False},
     },
 }
 
-# TIMEOUTS
+# RATE LIMIT TIMEOUTS
 BAN_TIMEOUT = config("BAN_TIMEOUT")
 CACHE_TIMEOUT = config("CACHE_TIMEOUT")
 
 # OTHER
 RATE_LIMIT_VALUE = config("RATE_LIMIT_VALUE")
 RATE_LIMIT_WINDOW = config("RATE_LIMIT_WINDOW")
+
+# AXES
+AXES_FAILURE_LIMIT = 3
+AXES_COOLOFF_TIME = 0.15
+AXES_LOCK_OUT_AT_FAILURE = True
+AXES_ONLY_USER_FAILURES = False
+AXES_RESET_ON_SUCCESS = True

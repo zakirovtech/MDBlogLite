@@ -29,6 +29,11 @@ from apps.blog.utils import (
 logger = logging.getLogger("blog")
 
 
+def locked_out(request):
+    """Temporary ban view for limited logins"""
+    return render(request, "lock.html", status=403)
+
+
 class AchievementListView(CommonContextMixin, generic.ListView):
     model = Achievement
     template_name = "achievement_list.html"
@@ -485,9 +490,9 @@ class BioDownload(CommonContextMixin, generic.TemplateView):
             try:
                 file = open(file_path, "rb")
                 response = FileResponse(file, as_attachment=True)
-                response["Content-Disposition"] = (
-                    f'attachment; filename="{os.path.basename(file_path)}"'
-                )
+                response[
+                    "Content-Disposition"
+                ] = f'attachment; filename="{os.path.basename(file_path)}"'
                 return response
             except Exception as e:
                 raise Http404(f"Error while reading file: {str(e)}")

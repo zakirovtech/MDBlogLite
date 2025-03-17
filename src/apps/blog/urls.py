@@ -20,10 +20,12 @@ from apps.blog.views import (
     SearchView,
     TagCreateView,
     TagDeleteView,
+    locked_out,
 )
 
 urlpatterns = [
     path("", HomeView.as_view(), name="home"),
+    path("locked/", locked_out, name="axes-lock-view"),
     path("search/", SearchView.as_view(), name="search"),
     path("bio/", BioShowView.as_view(), name="bio"),
     path("bio/init/", BioInitView.as_view(), name="bio-init"),

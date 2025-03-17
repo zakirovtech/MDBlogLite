@@ -1,6 +1,7 @@
 import logging
 import os
 
+from django.contrib.auth.signals import user_logged_in, user_login_failed
 from django.core.cache import cache
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
@@ -9,8 +10,10 @@ from apps.blog.models import Achievement, Bio, Post
 from apps.blog.tasks import delete_image
 
 logger = logging.getLogger("blog")
+security_logger = logging.getLogger("login")
 
 
+# Achievement model signals
 @receiver(post_delete, sender=Achievement)
 def delete_image_file_ach(sender, instance, **kwargs):
     if instance.image:
@@ -18,6 +21,7 @@ def delete_image_file_ach(sender, instance, **kwargs):
             os.remove(instance.image.path)
 
 
+# Bio model signals
 @receiver(post_delete, sender=Bio)
 def delete_image_on_bio_delete(sender, instance, **kwargs):
     if instance.image:
@@ -43,6 +47,7 @@ def clear_bio_cache_on_save(sender, instance, created, **kwargs):
         logger.info(f"Cache for Bio object is deleted after updating.")
 
 
+# Post model signals
 @receiver(post_delete, sender=Post)
 def delete_image_on_post_delete(sender, instance, **kwargs):
     if instance.image:
@@ -84,3 +89,18 @@ def delete_image_file_post(sender, instance, **kwargs):
     if instance.image:
         if os.path.isfile(instance.image.path):
             os.remove(instance.image.path)
+
+
+# User model signals
+@receiver(user_logged_in)
+def log_login_success(sender, request, user, **kwargs):
+    security_logger.info(
+        f"User {user.username} logged in successfully from IP {request.META.get('REMOTE_ADDR')}"
+    )
+
+
+@receiver(user_login_failed)
+def log_login_failed(sender, credentials, request, **kwargs):
+    security_logger.warning(
+        f"Failed login attempt with username {credentials.get('username')} from IP {request.META.get('REMOTE_ADDR')}"
+    )
