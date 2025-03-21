@@ -171,3 +171,15 @@ cython_debug/
 
 # Static files
 */static/
+
+# Ansible
+.ansible
+ansible.cfg
+**/ansible.cfg
+
+**/password.txt
+**/vault.yaml
+
+**/logs/
+*.log
+**/vars/
