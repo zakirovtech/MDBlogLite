@@ -4,7 +4,7 @@ set -a
 
 set +a
 
-export NGINX_CONFIG=./nginx/nginx.conf
+export NGINX_CONFIG="/etc/nginx/conf.d/$SITE_DOMAIN.conf"
 
 cat <<EOL > $NGINX_CONFIG
 server {
@@ -64,12 +64,3 @@ server {
     }
 }
 EOL
-
-# Validate the Nginx configuration
-if nginx -t; then
-    echo "Nginx configuration is valid."
-    nginx -s reload
-else
-    echo "Nginx configuration is invalid. Please check the configuration."
-    exit 1
-fi
