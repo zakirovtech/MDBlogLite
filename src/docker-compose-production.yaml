@@ -52,8 +52,6 @@ services:
       - ./certbot/www/:/var/www/certbot/:rw
       - ./certbot/conf/:/etc/letsencrypt/:rw
       - ./certbot/init.sh:/usr/utils/init.sh:rwx
-    depends_on:
-      - nginx
     entrypoint: >
       sh -c "/usr/utils/init.sh"
     networks:
