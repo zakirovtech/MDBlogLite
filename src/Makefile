@@ -13,5 +13,6 @@ build:
 up:
 	docker compose -f docker-compose-production.yaml up -d
 
-certbot:
-	./certbot/init.sh
+run_certbot:
+	cd certbot 
+	docker compose up
