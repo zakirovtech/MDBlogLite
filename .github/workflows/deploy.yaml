@@ -12,24 +12,27 @@ jobs:
   deploy:
     runs-on: self-hosted
     env:
-      REBUILD_NEEDED: false
+      WEB_REBUILD_NEEDED: false
+      NGINX_RESTART_NEEDED: false
     steps:
-      - name: Check rebuild needed
+      - name: Check files conditions
         run: |
           cd ${{ secrets.PROJECT_REMOTE_PATH }}
           git fetch origin main
           CHANGED_FILES=$(git diff --name-only origin/main..HEAD)
-          echo "Changed files: $CHANGED_FILES"
+          echo Changed files: $CHANGED_FILES
 
-          if echo "$CHANGED_FILES" | grep -qE "requirements.txt|Dockerfile|docker-compose-production.yaml"; then
-            echo "REBUILD_NEEDED=true" >> $GITHUB_ENV
-          else
-            echo "REBUILD_NEEDED=false" >> $GITHUB_ENV
-
-          echo "Rebuild status: ${{ env.REBUILD_NEEDED }}"
-
-          echo "Check is done"
+          if echo $CHANGED_FILES | grep -qE "requirements.txt|Dockerfile|docker-compose-production.yaml"; then
+            echo WEB_REBUILD_NEEDED=true >> $GITHUB_ENV
           fi
+
+          if echo $CHANGED_FILES | grep -qE ".*/nginx/secure.sh"; then
+            echo NGINX_RESTART_NEEDED=true >> $GITHUB_ENV
+          fi
+          
+          echo Check is done
+          echo WEB_REBUILD_NEEDED = $WEB_REBUILD_NEEDED
+          echo NGINX_RESTART_NEEDED = $NGINX_RESTART_NEEDED
 
       - name: Pull changes
         run: |
@@ -45,15 +48,19 @@ jobs:
           docker compose -f docker-compose-production.yaml stop web
 
       - name: Rebuild container if it is needed
-        if: env.REBUILD_NEEDED == 'true'
+        if: env.WEB_REBUILD_NEEDED == 'true'
         run: |
           cd ${{ secrets.PROJECT_REMOTE_PATH }}
           cd src
           docker compose -f docker-compose-production.yaml up --build -d --no-deps web
       
-      - name: Only restart web container if rebuild not needed
-        if: ${{ env.REBUILD_NEEDED == 'false' }}
+      - name: Only restart web container if rebuild is not needed
+        if: env.WEB_REBUILD_NEEDED == 'false'
         run: |
           cd ${{ secrets.PROJECT_REMOTE_PATH }}
           cd src
           docker compose -f docker-compose-production.yaml restart web
+
+      - name: Restart nginx container if it needs
+        if: env.NGINX_RESTART_NEEDED == 'true'
+        run: docker restart nginx
