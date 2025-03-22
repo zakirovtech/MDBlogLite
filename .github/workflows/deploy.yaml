@@ -23,16 +23,17 @@ jobs:
           echo Changed files: $CHANGED_FILES
 
           if echo $CHANGED_FILES | grep -qE "requirements.txt|Dockerfile|docker-compose-production.yaml"; then
-            echo WEB_REBUILD_NEEDED=true >> $GITHUB_ENV
+            echo "WEB_REBUILD_NEEDED=true" >> $GITHUB_ENV
           fi
 
           if echo $CHANGED_FILES | grep -qE ".*/nginx/secure.sh"; then
-            echo NGINX_RESTART_NEEDED=true >> $GITHUB_ENV
+            echo ${{ secrets.SUDO }} | sudo -S ../src/nginx/secure.sh
+            echo "NGINX_RESTART_NEEDED=true" >> $GITHUB_ENV
           fi
           
           echo Check is done
-          echo WEB_REBUILD_NEEDED = $WEB_REBUILD_NEEDED
-          echo NGINX_RESTART_NEEDED = $NGINX_RESTART_NEEDED
+          echo WEB_REBUILD_NEEDED = ${{ env.WEB_REBUILD_NEEDED }}
+          echo NGINX_RESTART_NEEDED = ${{ env.NGINX_RESTART_NEEDED }}
 
       - name: Pull changes
         run: |
@@ -47,20 +48,20 @@ jobs:
           cd src
           docker compose -f docker-compose-production.yaml stop web
 
-      - name: Rebuild container if it is needed
-        if: env.WEB_REBUILD_NEEDED == 'true'
+      - name: Rebuild web container if it is needed
+        if: ${{ env.WEB_REBUILD_NEEDED }} == 'true'
         run: |
           cd ${{ secrets.PROJECT_REMOTE_PATH }}
           cd src
           docker compose -f docker-compose-production.yaml up --build -d --no-deps web
       
       - name: Only restart web container if rebuild is not needed
-        if: env.WEB_REBUILD_NEEDED == 'false'
+        if: ${{ env.WEB_REBUILD_NEEDED }} == 'false'
         run: |
           cd ${{ secrets.PROJECT_REMOTE_PATH }}
           cd src
           docker compose -f docker-compose-production.yaml restart web
 
       - name: Restart nginx container if it needs
-        if: env.NGINX_RESTART_NEEDED == 'true'
+        if: ${{ env.NGINX_RESTART_NEEDED }} == 'true'
         run: docker restart nginx
