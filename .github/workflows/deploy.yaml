@@ -27,7 +27,7 @@ jobs:
           fi
 
           if echo $CHANGED_FILES | grep -qE ".*/nginx/secure.sh"; then
-            echo ${{ secrets.SUDO }} | sudo -S ../src/nginx/secure.sh
+            echo ${{ secrets.SUDO }} | sudo -S src/nginx/secure.sh
             echo "NGINX_RESTART_NEEDED=true" >> $GITHUB_ENV
           fi
           
