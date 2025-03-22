@@ -27,7 +27,6 @@ jobs:
           fi
 
           if echo $CHANGED_FILES | grep -qE ".*/nginx/secure.sh"; then
-            echo ${{ secrets.SUDO }} | sudo -S src/nginx/secure.sh
             echo "NGINX_RESTART_NEEDED=true" >> $GITHUB_ENV
           fi
           
@@ -64,4 +63,8 @@ jobs:
 
       - name: Restart nginx container if it needs
         if: ${{ env.NGINX_RESTART_NEEDED }} == 'true'
-        run: docker restart nginx
+
+        run: |
+          cd ${{ secrets.PROJECT_REMOTE_PATH }}
+          echo ${{ secrets.SUDO }} | sudo -S src/nginx/secure.sh
+          docker restart nginx
