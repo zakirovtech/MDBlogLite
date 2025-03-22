@@ -26,7 +26,7 @@ jobs:
             echo "WEB_REBUILD_NEEDED=true" >> $GITHUB_ENV
           fi
 
-          if echo $CHANGED_FILES | grep -qE ".*/nginx/secure.sh"; then
+          if echo $CHANGED_FILES | grep -qE "src/nginx/secure.sh"; then
             echo "NGINX_RESTART_NEEDED=true" >> $GITHUB_ENV
           fi
           
@@ -48,23 +48,24 @@ jobs:
           docker compose -f docker-compose-production.yaml stop web
 
       - name: Rebuild web container if it is needed
-        if: ${{ env.WEB_REBUILD_NEEDED }} == 'true'
+        if: ${{ env.WEB_REBUILD_NEEDED == 'true' }} 
         run: |
           cd ${{ secrets.PROJECT_REMOTE_PATH }}
           cd src
           docker compose -f docker-compose-production.yaml up --build -d --no-deps web
       
       - name: Only restart web container if rebuild is not needed
-        if: ${{ env.WEB_REBUILD_NEEDED }} == 'false'
+        if: ${{ env.WEB_REBUILD_NEEDED == 'false' }}
         run: |
           cd ${{ secrets.PROJECT_REMOTE_PATH }}
           cd src
           docker compose -f docker-compose-production.yaml restart web
 
       - name: Restart nginx container if it needs
-        if: ${{ env.NGINX_RESTART_NEEDED }} == 'true'
+        if: ${{ env.NGINX_RESTART_NEEDED == 'true' }} 
 
         run: |
           cd ${{ secrets.PROJECT_REMOTE_PATH }}
-          echo ${{ secrets.SUDO }} | sudo -S src/nginx/secure.sh
+          cd src
+          echo ${{ secrets.SUDO }} | sudo -S ./nginx/secure.sh
           docker restart nginx
