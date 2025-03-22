@@ -10,4 +10,5 @@ services:
       - /opt/certbot/www/:/var/www/certbot/:rw
       - /opt/certbot/conf/:/etc/letsencrypt/:rw
       - ./certbot-entrypoint.sh:/certbot-entrypoint.sh
-    entrypoint: ["/bin/bash", "/certbot-entrypoint.sh"]
+    entrypoint: >
+      `sh -c /certbot-entrypoint.sh
