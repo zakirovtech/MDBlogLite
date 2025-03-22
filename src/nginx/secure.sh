@@ -1,6 +1,8 @@
+pwd 
+
 set -a
 
-. ../env/.env
+. ./env/.env
 
 set +a
 
