@@ -3,7 +3,7 @@ import json
 import logging
 import os
 from typing import Any
-from urllib.parse import quote
+from urllib.parse import quote, unquote_plus
 
 from django.conf import settings
 from django.core.cache import cache
@@ -178,6 +178,9 @@ class PostListView(CommonContextMixin, generic.ListView):
     def get_queryset(self) -> QuerySet[Any]:
         object_list = cache.get(self.cache_key)
         tag = self.kwargs.get("tag")
+
+        if tag is not None:
+            tag = unquote_plus(tag)
 
         if object_list is None:
             object_list = (

@@ -1,4 +1,5 @@
 import re
+from urllib.parse import quote_plus
 
 import bleach
 import markdown
@@ -51,7 +52,8 @@ class Tag(DateModel):
         return self.name
 
     def get_absolute_url(self):
-        return reverse("post-list-by-tag", kwargs={"tag": self.name})
+        tag_name = quote_plus(self.name)
+        return reverse("post-list-by-tag", kwargs={"tag": tag_name})
 
     def save(self, *args, **kwargs) -> None:
         self.name = self.name.capitalize()
