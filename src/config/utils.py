@@ -12,7 +12,7 @@ def is_postgres_available(credentials: Dict) -> bool:
             password=credentials.get("PASSWORD"),
             host=credentials.get("HOST"),
             port=credentials.get("PORT", "5432"),
-            connect_timeout=2
+            connect_timeout=2,
         )
         conn.close()
         return True

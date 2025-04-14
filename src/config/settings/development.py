@@ -16,8 +16,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8080",
 ]
 
-# You can use the code bellow in production settings, when you need to scale 
-# db servers with master and replicas. 
+# You can use the code bellow in production settings, when you need to scale
+# db servers with master and replicas.
 # |
 # |
 # V
@@ -28,7 +28,7 @@ db_creds = {
     "NAME": config("POSTGRES_DB"),
     "USER": config("POSTGRES_USER"),
     "PASSWORD": config("POSTGRES_PASSWORD"),
-    "HOST": "192.168.0.100", # localhost MasterDB
+    "HOST": "192.168.0.100",  # localhost MasterDB
     "PORT": config("DB_PORT"),
 }
 
@@ -36,7 +36,7 @@ SQLITE3 = None
 
 if not is_postgres_available(credentials=db_creds):
     print("[DEBUG] SQLITE3 IS IN USING")
-    
+
     SQLITE3 = True
 
     DATABASES = {
@@ -47,27 +47,25 @@ if not is_postgres_available(credentials=db_creds):
     }
 else:
     DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": config("POSTGRES_DB"),
-        "USER": config("POSTGRES_USER"),
-        "PASSWORD": config("POSTGRES_PASSWORD"),
-        "HOST": "192.168.0.100", # localhost MasterDB
-        "PORT": config("DB_PORT"),
-
-    },
-    "replica": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": config("POSTGRES_DB"),
-        "USER": config("POSTGRES_USER"),
-        "PASSWORD": config("POSTGRES_PASSWORD"),
-        "HOST": "192.168.0.101", # localhost ReplicaDB1
-        "PORT": config("DB_PORT"),
-        
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": config("POSTGRES_DB"),
+            "USER": config("POSTGRES_USER"),
+            "PASSWORD": config("POSTGRES_PASSWORD"),
+            "HOST": "192.168.0.100",  # localhost MasterDB
+            "PORT": config("DB_PORT"),
+        },
+        "replica": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": config("POSTGRES_DB"),
+            "USER": config("POSTGRES_USER"),
+            "PASSWORD": config("POSTGRES_PASSWORD"),
+            "HOST": "192.168.0.101",  # localhost ReplicaDB1
+            "PORT": config("DB_PORT"),
+        },
     }
-}
 
-if not SQLITE3:    
+if not SQLITE3:
     DATABASE_ROUTERS = ["config.dbrouting.ReadWriteRouter"]
 
 # CACHE
