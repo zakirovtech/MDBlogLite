@@ -1,10 +1,10 @@
 environment:
 	cp ./env/.env.template ./env/.env
 
-prepare:
-	chmod +x ./nginx/secure.sh && chmod +x ./certbot/init.sh
+executeable:
+	chmod u+x ./nginx/secure.sh && chmod u+x ./certbot/certbot-entrypoint.sh
 
-webserver:
+site_secure:
 	./nginx/secure.sh
 
 build:

@@ -16,7 +16,6 @@ services:
     restart: always
     command: "bash ./scripts/entrypoint.sh"
     networks:
-      - backend_network
       - nginx_network
 
   cache:
@@ -31,7 +30,7 @@ services:
       - ./env/.env
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     networks:
-      - backend_network
+      - nginx_network
 
   celery_worker:
     restart: always
@@ -47,12 +46,8 @@ services:
       - web
     command: 'celery -A config worker -l info'
     networks:
-      - backend_network
+      - nginx_network
 
 networks:
-  backend_network:
-    driver: bridge
-    name: backend_network
-  
   nginx_network:
     external: true
