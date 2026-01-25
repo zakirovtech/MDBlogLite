@@ -111,6 +111,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 # FILES
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+pdf_path = Path(MEDIA_ROOT) / "pdf" / "cv.pdf"
+pdf_path.parent.mkdir(parents=True, exist_ok=True)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
