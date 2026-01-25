@@ -495,7 +495,7 @@ class BioDownload(CommonContextMixin, generic.TemplateView):
         context = self.get_context_data()
         return render(request, self.template_name, context=context)
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         file_path = os.path.join(settings.MEDIA_ROOT, "pdf/cv.pdf")
 
         if os.path.exists(file_path):
