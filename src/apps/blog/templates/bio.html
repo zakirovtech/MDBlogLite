@@ -1,25 +1,43 @@
 {% extends "base.html" %}
-
 {% block content %}
-    <div style="display: flex; align-items: flex-start; flex-wrap: wrap;">
+<div class="card">
+  <div class="card-body">
+    <div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
+      <div class="d-flex gap-3 align-items-start">
         {% if bio.image %}
-        <img src="{{ bio.image.url }}" class="img-thumbnail" alt="Avatar" style="width: 200px; height: auto; margin-right: 20px;">
+          <img src="{{ bio.image.url }}" class="img-thumbnail" alt="Avatar" style="width: 120px; height: auto;">
         {% endif %}
-        <div style="flex: 1; min-width: 200px;">
-            <i class="bi bi-download me-1"></i><a class="link-dark" href="{% url 'bio-download' %}"><span class="fw-lighter me-1">Download PDF</span></a>
-            {% if request.user.is_authenticated%}
-            <i class="bi bi-pencil me-1"></i><a class="link-dark" href="{% url 'bio-update' %}"><span class="fw-lighter me-1">Edit Bio</span></a>
-            <i class="bi bi-trash me-1"></i><a class="link-dark" href="{% url 'bio-delete' %}"><span class="fw-lighter me-1">Delete Bio</span></a>
-            {% endif %}
-            <i class="bi bi-calendar me-2"></i><span class="fw-lighter me-1">Updated on {{bio.date_updated|date:"d F Y"}} at {{bio.date_updated|time:"H:i"}}</span>
-            <div class="markdown-content">
-                <p>{{ bio.get_body_as_html|safe }}</p>
-            </div>  
+        <div>
+          <h1 class="h4 mb-1">About</h1>
+          <div class="meta">
+            <i class="bi bi-calendar me-1"></i>Updated on {{bio.date_updated|date:"d M Y"}} {{bio.date_updated|time:"H:i"}}
+          </div>
         </div>
+      </div>
+
+      <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-outline-secondary btn-sm" href="{% url 'bio-download' %}">
+          <i class="bi bi-download me-1"></i>PDF
+        </a>
+        {% if request.user.is_authenticated %}
+          <a class="btn btn-outline-secondary btn-sm" href="{% url 'bio-update' %}">
+            <i class="bi bi-pencil me-1"></i>Edit
+          </a>
+          <a class="btn btn-outline-secondary btn-sm" href="{% url 'bio-delete' %}">
+            <i class="bi bi-trash me-1"></i>Delete
+          </a>
+        {% endif %}
+      </div>
     </div>
-    <!--Recaptcha-->
-    <form method="post">
-        {% csrf_token %}
-        {{ recaptcha_form.captcha }}     
-    </form>
+
+    <div class="prose">
+      {{ bio.get_body_as_html|safe }}
+    </div>
+  </div>
+</div>
+
+<form method="post">
+  {% csrf_token %}
+  {{ recaptcha_form.captcha }}
+</form>
 {% endblock content %}

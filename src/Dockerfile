@@ -5,11 +5,16 @@ WORKDIR /usr/app/src/
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONDONUNBUFFERED 1
 
-RUN apt-get update && apt-get upgrade -y
-RUN apt install gettext -y
-RUN apt install libcairo2 libcairo2-dev libpango-1.0-0 libpango1.0-dev \
-    libgdk-pixbuf2.0-0 libgdk-pixbuf2.0-dev libfreetype6 libfreetype6-dev \
-    fontconfig -y
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        gettext \
+        libcairo2 libcairo2-dev \
+        libpango-1.0-0 libpango1.0-dev \
+        libgdk-pixbuf-2.0-0 libgdk-pixbuf-2.0-dev \
+        libfreetype6 libfreetype6-dev \
+        fontconfig \
+    && rm -rf /var/lib/apt/lists/*
+
 
 COPY ./requirements.txt .
 

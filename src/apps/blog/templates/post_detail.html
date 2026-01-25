@@ -1,31 +1,44 @@
-{% extends "base.html"%}
-{% block title %}<title>{{blogname}} | {{post.header}}</title>{% endblock title %}
+{% extends "base.html" %}
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6 mt-3">
-        <h1 class="display-6">{{ post.header }}</h1>
-        <div>
-            <i class="bi bi-eye me-1"></i><span class="fw-lighter me-1">{{post.views}}</span>
-            <i class="bi bi-calendar me-2"></i><span class="fw-lighter me-1">Created on {{post.date_created|date:"d F Y"}} at {{post.date_created|time:"H:i"}}</span>
-            {% if request.user.is_authenticated%}
-            <i class="bi bi-pencil me-1"></i><a class="link-dark" href="{{ post.get_update_url }}"><span class="fw-lighter me-1">Edit</span></a>
-            <i class="bi bi-trash me-1"></i><a class="link-dark" href="{{ post.get_delete_url }}"><span class="fw-lighter me-1">Delete</span></a>
-            {% endif %}
-            <br>
-            <i class="bi bi-tag me-1"></i>
-            {% for tag in post.tags.all|dictsort:"name"%}
-            <span class="me-1"><a class="link-light bg-secondary" href="{{tag.get_absolute_url}}"> &nbsp; {{tag.name}} &nbsp;</a></span>
-            {% endfor %}
-        </div>
-        
 
-        <div class="markdown-content">
-            <p class="font-monospace">{{ post.get_body_as_html|safe }}</p>
-        </div>
-        <div class="image-content">
-            {%if post.image %}<img src="{{ post.image.url }}" class="img-thumbnail">{% endif %}
-        </div>
+<div class="page-hero">
+  <div>
+    <h1 class="h4 mb-1">{{ post.header }}</h1>
+    <div class="meta">
+      <i class="bi bi-eye me-1"></i>{{ post.views }}
+      <span class="mx-2">·</span>
+      <i class="bi bi-calendar me-1"></i>{{ post.date_created|date:"d M Y" }} {{ post.date_created|time:"H:i" }}
     </div>
-    
+  </div>
+
+  {% if request.user.is_authenticated %}
+    <div class="d-flex gap-2 flex-wrap">
+      <a class="btn btn-outline-secondary btn-sm" href="{{ post.get_update_url }}"><i class="bi bi-pencil me-1"></i>Edit</a>
+      <a class="btn btn-outline-secondary btn-sm" href="{{ post.get_delete_url }}"><i class="bi bi-trash me-1"></i>Delete</a>
+    </div>
+  {% endif %}
 </div>
+
+<div class="card">
+  <div class="card-body">
+    <div class="mb-3">
+      {% for tag in post.tags.all|dictsort:"name" %}
+        <a class="chip me-1 mb-1" href="{{ tag.get_absolute_url }}">
+          <i class="bi bi-tag"></i>{{ tag.name }}
+        </a>
+      {% endfor %}
+    </div>
+
+    <div class="prose">
+      {{ post.get_body_as_html|safe }}
+    </div>
+  </div>
+</div>
+
+<!-- Recaptcha -->
+<form method="post">
+  {% csrf_token %}
+  {{ recaptcha_form.captcha }}
+</form>
+
 {% endblock content %}

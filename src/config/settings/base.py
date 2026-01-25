@@ -1,3 +1,4 @@
+from genericpath import exists
 import os
 from pathlib import Path
 
@@ -163,6 +164,8 @@ ALLOWED_ATTRIBUTES = {
 }
 
 # LOGGING
+LOG_DIR = BASE_DIR / "logs"
+LOG_DIR.mkdir(exist_ok=True)
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -199,13 +202,21 @@ LOGGING = {
     },
 }
 
-# RATE LIMIT TIMEOUTS
-BAN_TIMEOUT = config("BAN_TIMEOUT")
-CACHE_TIMEOUT = config("CACHE_TIMEOUT")
+# RATE LIMIT & CACHE TIMEOUTS
+# NOTE: README documents RATE_LIMIT_WINDOW as **minutes**.
+BAN_TIMEOUT = config("BAN_TIMEOUT", cast=int, default=120)
+CACHE_TIMEOUT = config("CACHE_TIMEOUT", cast=int, default=3600)
 
-# OTHER
-RATE_LIMIT_VALUE = config("RATE_LIMIT_VALUE")
-RATE_LIMIT_WINDOW = config("RATE_LIMIT_WINDOW")
+RATE_LIMIT_VALUE = config("RATE_LIMIT_VALUE", cast=int, default=15)
+RATE_LIMIT_WINDOW = config("RATE_LIMIT_WINDOW", cast=int, default=3)  # minutes
+
+# Backward/forward compatible: allow overriding window directly in seconds.
+RATE_LIMIT_WINDOW_SECONDS = config(
+    "RATE_LIMIT_WINDOW_SECONDS",
+    cast=int,
+    default=RATE_LIMIT_WINDOW * 60,
+)
+
 
 # AXES
 AXES_FAILURE_LIMIT = 3

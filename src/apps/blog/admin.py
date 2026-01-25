@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib import admin
 
-from apps.blog.models import Bio, Ip, Post, Tag
+from apps.blog.models import Bio, Ip, Post, Tag, SiteSettings
 
 
 class TagInline(admin.TabularInline):
@@ -49,6 +49,11 @@ class MyAdminSite(admin.AdminSite):
     site_header = settings.BLOG_NAME
     site_title = "Мой сайт"
     index_title = "Добро пожаловать в админку"
+
+
+@admin.register(SiteSettings)
+class SiteSettingsAdmin(admin.ModelAdmin):
+    list_display = ("updated_at",)
 
 
 admin_site = MyAdminSite(name="admin")

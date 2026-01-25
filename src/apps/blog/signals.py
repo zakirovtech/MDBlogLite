@@ -1,5 +1,4 @@
 import logging
-import os
 
 from django.contrib.auth.signals import user_logged_in, user_login_failed
 from django.core.cache import cache
@@ -15,46 +14,42 @@ security_logger = logging.getLogger("login")
 
 # Achievement model signals
 @receiver(post_delete, sender=Achievement)
-def delete_image_file_ach(sender, instance, **kwargs):
+def delete_image_on_achievement_delete(sender, instance, **kwargs):
+    """Delete uploaded image asynchronously (Celery) to avoid blocking request.
+
+    The Celery task is idempotent (checks file existence) so it is safe to call.
+    """
     if instance.image:
-        if os.path.isfile(instance.image.path):
-            os.remove(instance.image.path)
+        delete_image.delay(str(instance), instance.image.path, instance.id)
 
 
 # Bio model signals
 @receiver(post_delete, sender=Bio)
 def delete_image_on_bio_delete(sender, instance, **kwargs):
     if instance.image:
-        path = instance.image.path
-        name = str(instance)
-        id = instance.id
-        delete_image.delay(name, path, id)
+        delete_image.delay(str(instance), instance.image.path, instance.id)
 
 
 @receiver(post_delete, sender=Bio)
 def clear_bio_cache_on_delete(sender, instance, **kwargs):
     cache_key = "bio_show_cache"
     cache.delete(cache_key)
-    logger.info(f"Cache for Bio object is deleted after deletion.")
+    logger.info("Cache for Bio object is deleted after deletion.")
 
 
 @receiver(post_save, sender=Bio)
 def clear_bio_cache_on_save(sender, instance, created, **kwargs):
     cache_key = "bio_show_cache"
-
     if not created:
         cache.delete(cache_key)
-        logger.info(f"Cache for Bio object is deleted after updating.")
+        logger.info("Cache for Bio object is deleted after updating.")
 
 
 # Post model signals
 @receiver(post_delete, sender=Post)
 def delete_image_on_post_delete(sender, instance, **kwargs):
     if instance.image:
-        path = instance.image.path
-        name = str(instance)
-        id = instance.id
-        delete_image.delay(name, path, id)
+        delete_image.delay(str(instance), instance.image.path, instance.id)
 
 
 @receiver(post_save, sender=Post)
@@ -74,21 +69,12 @@ def clear_post_cache_on_save(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=Post)
 def clear_post_cache_on_delete(sender, instance, **kwargs):
     cache.delete("post_list_cache")
-    logger.info(
-        "Cache for Post_List objects is deleted after deleting a post."
-    )
+    logger.info("Cache for Post_List objects is deleted after deleting a post.")
 
     cache.delete(f"post_{instance.id}_detail_cache")
     logger.info(
         f"Cache for Post_Detail object {instance.id} is deleted after deleting."
     )
-
-
-@receiver(post_delete, sender=Post)
-def delete_image_file_post(sender, instance, **kwargs):
-    if instance.image:
-        if os.path.isfile(instance.image.path):
-            os.remove(instance.image.path)
 
 
 # User model signals

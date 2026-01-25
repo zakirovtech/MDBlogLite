@@ -1,47 +1,92 @@
 {% extends "base.html" %}
 
-<title>{{blogname}} | {{title}}</title>
-
 {% block content %}
-{% if request.user.is_authenticated %}
-<div class="container-sm row justify-content-center">
-    <div class="col-md-6 mt-3">
-        <p class="lead">It seems you have rights to click here: 
-            <a class="nav-link" href="{% url 'achievements-create' %}"><i class="bi bi-plus"></i></a>
-        </p>
-    </div>    
+<div class="page-hero">
+  <div>
+    <h1 class="h4">Achievements</h1>
+    <div class="meta">A short list of things that author create / learned / done.</div>
+  </div>
+
+  {% if request.user.is_authenticated %}
+    <a class="btn btn-outline-secondary btn-sm" href="{% url 'achievements-create' %}">
+      <i class="bi bi-plus me-1"></i>New
+    </a>
+  {% endif %}
 </div>
-{% endif %}
 
 {% if not achievements %}
-<div class="container-sm row justify-content-center">
-    <div class="col-md-6 mt-3">
-        <p class="lead">Author does not have any achievements yet...</p>
+  <div class="card">
+    <div class="card-body">
+      <div class="meta">Author have no achievements yet...</div>
     </div>
-</div>
-
+  </div>
 {% else %}
-{% for ach in achievements %}
-<div class="container-sm row justify-content-center">
-    <div class="col-md-6 mt-3">
-        <a class="link-dark text-decoration-none" href="{{ ach.get_absolute_url }}"><h3>{{ach.header}}</h2></a>
-        <div>
-            <i class="bi bi-calendar me-2"></i>
-            <span class="fw-lighter me-1">Created on {{ ach.date_created|date:"d F Y" }} at {{ ach.date_created|time:"H:i" }}</span>
-            {% if request.user.is_authenticated%}
-            <i class="bi bi-pencil me-1"></i><a class="link-dark" href="{{ ach.get_update_url }}"><span class="fw-lighter me-1">Edit</span></a>
-            <i class="bi bi-trash me-1"></i><a class="link-dark" href="{{ ach.get_delete_url }}"><span class="fw-lighter me-1">Delete</span></a>
-            {% endif %}
-            <br>
+
+  {% for ach in achievements %}
+    <div class="card card-hover mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start gap-3">
+          <div class="w-100">
+            <a href="{{ ach.get_absolute_url }}">
+              <h3 class="h5 mb-1">{{ ach.header }}</h3>
+            </a>
+
+            <div class="meta mb-3">
+              <i class="bi bi-calendar me-1"></i>{{ ach.date_created|date:"d M Y" }} {{ ach.date_created|time:"H:i" }}
+              {% if request.user.is_authenticated %}
+                <span class="mx-2">·</span>
+                <a class="meta" href="{{ ach.get_update_url }}"><i class="bi bi-pencil"></i> Edit</a>
+                <span class="mx-1"></span>
+                <a class="meta" href="{{ ach.get_delete_url }}"><i class="bi bi-trash"></i> Delete</a>
+              {% endif %}
+            </div>
+
+            <div class="prose">
+              {{ ach.body|truncatechars:240 }}
+            </div>
+
+            <div class="mt-3">
+              <a class="btn btn-outline-secondary btn-sm" href="{{ ach.get_absolute_url }}">Open</a>
+            </div>
+          </div>
+
+          {% if ach.image %}
+            <img src="{{ ach.image.url }}" alt="Achievement image"
+                 style="width:120px; height:auto;"
+                 class="img-thumbnail">
+          {% endif %}
         </div>
-        <div class="content">
-            <p class="font-monospace">{{ach.body}}</p>
-        </div>
-        <a class="link-dark text-decoration-none" href="{{ ach.get_absolute_url }}"><span class="font-monospace">See more...</span></a>
-        <hr>
+      </div>
     </div>
-    
-</div>
-{% endfor %}
+  {% endfor %}
+
+  {% if is_paginated %}
+    <nav aria-label="Achievements pages" class="mt-4">
+      <ul class="pagination">
+        {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page=1">«</a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Prev</a>
+          </li>
+        {% endif %}
+
+        <li class="page-item active">
+          <span class="page-link">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        </li>
+
+        {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">»</a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+
 {% endif %}
 {% endblock content %}

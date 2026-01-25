@@ -1,79 +1,106 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container-sm row justify-content-center">
-    <div class="col-md-6 mt-3">
-        <h1 class="display-6">Contents</h1>
-        {% if request.user.is_authenticated%}
-        <div id="contentHelpBlock" class="form-text">
-            You can create a new tag
-        </div>
-        <div class="col-sm-4 mb-3">
-            <a href="{% url 'tag-create' %}" class="btn btn-outline-success">Create a new tag</a>
-        </div>
-        {% endif %}
-        <p class="lead">All tags in alphabet order using in the blog</p>
-        {% for tag in tags|dictsort:"name" %}
-            <span class="me-1"> <a class="link-light bg-secondary" href="{{tag.get_absolute_url}}">&nbsp; {{ tag.name }} &nbsp;</a></span>
-        {% endfor %}
-        <hr>
-    </div>
-    
+<div class="page-hero">
+  <div>
+    <h1 class="h4">Contents</h1>
+    <div class="meta">All posts` tags in alphabet order:</div>
+  </div>
+
+  {% if request.user.is_authenticated %}
+    <a href="{% url 'tag-create' %}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-plus me-1"></i>Create a new tag
+    </a>
+  {% endif %}
 </div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    {% for tag in tags|dictsort:"name" %}
+      <a class="chip me-1 mb-1" href="{{ tag.get_absolute_url }}">
+        <i class="bi bi-tag"></i>{{ tag.name }}
+      </a>
+    {% endfor %}
+  </div>
+</div>
+
 {% if not posts %}
-<div class="container-sm row justify-content-center">
-    <div class="col-md-6 mt-3">
-        <p class="lead">Author does not have any posts yet...</p>
-    </div>
+<div class="card">
+  <div class="card-body">
+    <div class="meta">Author does not have any posts yet...</div>
+  </div>
 </div>
 
 {% else %}
 {% for post in posts %}
-<div class="container-sm row justify-content-center">
-    <div class="col-md-6 mt-3">
-        <a class="link-dark text-decoration-none" href="{{ post.get_absolute_url }}"><h3>{{post.header}}</h2></a>
-        <div>
-            <i class="bi bi-eye me-1"></i><span class="fw-lighter me-1">{{post.views}}</span>
-            <i class="bi bi-calendar me-2"></i>
-            <span class="fw-lighter me-1">Created on {{ post.date_created|date:"d F Y" }} at {{ post.date_created|time:"H:i" }}</span>
-            {% if request.user.is_authenticated%}
-            <i class="bi bi-pencil me-1"></i><a class="link-dark" href="{{ post.get_update_url }}"><span class="fw-lighter me-1">Edit</span></a>
-            <i class="bi bi-trash me-1"></i><a class="link-dark" href="{{ post.get_delete_url }}"><span class="fw-lighter me-1">Delete</span></a>
+  <div class="card card-hover mb-3">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-start gap-3">
+        <div class="w-100">
+          <a href="{{ post.get_absolute_url }}">
+            <h3 class="h5 mb-1">{{ post.header }}</h3>
+          </a>
+
+          <div class="meta mb-2">
+            <i class="bi bi-eye me-1"></i>{{post.views}}
+            <span class="mx-2">·</span>
+            <i class="bi bi-calendar me-1"></i>{{ post.date_created|date:"d M Y" }} {{ post.date_created|time:"H:i" }}
+            {% if request.user.is_authenticated %}
+              <span class="mx-2">·</span>
+              <a class="meta" href="{{ post.get_update_url }}"><i class="bi bi-pencil"></i> Edit</a>
+              <span class="mx-1"></span>
+              <a class="meta" href="{{ post.get_delete_url }}"><i class="bi bi-trash"></i> Delete</a>
             {% endif %}
-            <br>
-            <i class="bi bi-tag me-1"></i>
-            {% for tag in post.tags.all|dictsort:"name"%}
-            <span class="me-1"><a class="link-light bg-secondary" href="{{tag.get_absolute_url}}">&nbsp; {{ tag.name }} &nbsp;</a></span>
+          </div>
+
+          <div class="mb-2">
+            {% for tag in post.tags.all|dictsort:"name" %}
+              <a class="chip me-1 mb-1" href="{{tag.get_absolute_url}}">
+                <i class="bi bi-tag"></i>{{ tag.name }}
+              </a>
             {% endfor %}
+          </div>
+
+          <div class="prose">
+            {{ post.get_truncated_body }}
+          </div>
+
+          <div class="mt-3">
+            <a class="btn btn-outline-secondary btn-sm" href="{{ post.get_absolute_url }}">Continue</a>
+          </div>
         </div>
-        <div class="markdown-content">
-            <p class="font-monospace">{{post.get_truncated_body}}</p>
-        </div>
-        <a class="link-dark text-decoration-none" href="{{ post.get_absolute_url }}"><span class="font-monospace">Continue...</span></a>
-        <hr>
+      </div>
     </div>
-    
-</div>
+  </div>
 {% endfor %}
 {% endif %}
-<div class="pagination">
-    <!--Default Django pagination-->
-    <span class="step-links">
-        {% if page_obj.has_previous %}
-            <a class="link-dark" href="?page=1">&laquo; first</a>
-            <a class="link-dark" href="?page={{ page_obj.previous_page_number }}">previous</a>
-        {% endif %}
+{% if is_paginated %}
+<nav aria-label="Posts pages" class="mt-4">
+  <ul class="pagination">
+    {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page=1">«</a>
+      </li>
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Prev</a>
+      </li>
+    {% endif %}
 
-        <span class="current lead">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-        </span>
+    <li class="page-item active">
+      <span class="page-link">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    </li>
 
-        {% if page_obj.has_next %}
-            <a class="link-dark" href="?page={{ page_obj.next_page_number }}">next</a>
-            <a class="link-dark" href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
-        {% endif %}
-    </span>
-</div>
+    {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+      </li>
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">»</a>
+      </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
 
 <!--Recaptcha-->
 <form method="post">

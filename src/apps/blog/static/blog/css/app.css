@@ -1,0 +1,255 @@
+/* Minimal + dev look (Bootstrap-friendly) */
+
+:root{
+  --bg: #0b0f14;
+  --panel: #0f1621;
+  --text: #e7edf6;
+  --muted: #9fb0c3;
+  --border: rgba(231, 237, 246, 0.12);
+  --accent: #58a6ff;
+  --accent-2: #3ddc97;
+
+  --radius: 14px;
+}
+
+/* light mode by default; auto-dark if user prefers */
+@media (prefers-color-scheme: light){
+  :root{
+    --bg: #fbfbfc;
+    --panel: #ffffff;
+    --text: #111827;
+    --muted: #6b7280;
+    --border: rgba(17, 24, 39, 0.12);
+    --accent: #2563eb;
+    --accent-2: #16a34a;
+  }
+}
+
+html, body { height: 100%; }
+
+body{
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+a{ color: inherit; text-decoration: none; }
+a:hover{ color: var(--accent); text-decoration: none; }
+
+.container-narrow{
+  max-width: 920px;
+}
+
+/* Navbar */
+.navbar{
+  background: transparent !important;
+  border-bottom: 1px solid var(--border);
+}
+
+.navbar .navbar-brand{
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+
+.nav-link{
+  color: var(--muted) !important;
+}
+
+.nav-link.active{
+  color: var(--text) !important;
+}
+
+/* Buttons (subtle) */
+.btn{
+  border-radius: 12px;
+}
+.btn-primary{
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.btn-outline-secondary{
+  border-color: var(--border);
+  color: var(--muted);
+}
+.btn-outline-secondary:hover{
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Cards */
+.card{
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.card-hover:hover{
+  border-color: rgba(88,166,255,0.35);
+}
+
+/* Chips (tags) */
+.chip{
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .2rem .55rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: .9rem;
+  line-height: 1.2;
+}
+.chip:hover{
+  border-color: rgba(88,166,255,0.35);
+  color: var(--accent);
+}
+
+/* Meta row */
+.meta{
+  color: var(--muted);
+  font-size: .92rem;
+}
+
+/* Markdown / prose */
+.prose{
+  font-size: 1.02rem;
+  line-height: 1.75;
+}
+
+.prose h1, .prose h2, .prose h3{
+  margin-top: 1.2rem;
+  margin-bottom: .6rem;
+  font-weight: 700;
+}
+
+.prose p{ margin: 0 0 1rem; }
+
+.prose a{
+  color: var(--accent);
+}
+.prose a:hover{
+  text-decoration: underline;
+}
+
+.prose blockquote{
+  border-left: 3px solid rgba(88,166,255,0.45);
+  padding: .25rem 1rem;
+  margin: 1rem 0;
+  color: var(--muted);
+}
+
+.prose ul, .prose ol{
+  margin: 0 0 1rem 1.3rem;
+}
+
+.prose code{
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: .95em;
+  padding: .12rem .35rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(127,127,127,0.08);
+}
+
+.prose pre{
+  padding: 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: rgba(127,127,127,0.08);
+  overflow-x: auto;
+}
+
+.prose pre code{
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.prose img{
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+/* Footer */
+.site-footer{
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+/* Pagination */
+.pagination{
+  gap: .4rem;
+}
+.page-link{
+  border-radius: 12px !important;
+  border: 1px solid var(--border) !important;
+  background: transparent !important;
+  color: var(--muted) !important;
+}
+.page-link:hover{
+  border-color: rgba(88,166,255,0.35) !important;
+  color: var(--accent) !important;
+}
+.page-item.active .page-link{
+  background: rgba(88,166,255,0.12) !important;
+  border-color: rgba(88,166,255,0.35) !important;
+  color: var(--text) !important;
+}
+
+/* Small "hero" header */
+.page-hero{
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.page-hero h1{
+  margin: 0;
+}
+
+/* Banner / hero media */
+.banner{
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  display: block;
+}
+
+.banner-wrap{
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.banner-wrap::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.35), rgba(0,0,0,0));
+  pointer-events: none;
+}
+
+.banner{
+  width: 100%;
+  height: 260px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Navbar stability */
+.navbar-nav .nav-link{
+  white-space: nowrap;
+}
+
+.navbar form[role="search"]{
+  max-width: 360px;
+}
+
+.navbar form[role="search"] .form-control{
+  min-width: 220px;
+}

@@ -1,41 +1,82 @@
 {% extends "base.html" %}
 
-<title>{{ title }}</title>
-
 {% block content %}
-<!--Banner | Temporary logic-->
-<div class="container-sm row justify-content-center">
-    <div class="col-md-6 mt-3">
-        {% if banner %} <img src="{{ banner }}" alt="Banner" class="img-fluid" style="width: 100%; height: 250px;"> <hr>{% endif%}
-    </div>
-    
+
+<div class="page-hero">
+  <div>
+    <h1 class="h4 mb-1">Home</h1>
+    <div class="meta">Most viewed posts</div>
+  </div>
+
+  <a class="btn btn-outline-secondary btn-sm" href="{% url 'post-list' %}">
+    <i class="bi bi-journal-text me-1"></i>All posts
+  </a>
 </div>
 
-{% for post in most_viewed_posts %}
-<div class="container-sm row justify-content-center">
-    <div class="col-md-6 mt-3">
-        <a class="link-dark text-decoration-none" href="{{ post.get_absolute_url }}"><h3>{{post.header}}</h2></a>
-        <div>
-            <i class="bi bi-eye me-1"></i><span class="fw-lighter me-1">{{post.views}}</span>
-            <i class="bi bi-calendar me-2"></i><span class="fw-lighter me-1">Created on {{post.date_updated|date:"d F Y"}} at {{post.date_updated|time:"H:i"}}</span>
-            {% if request.user.is_authenticated%}
-            <i class="bi bi-pencil me-1"></i><a class="link-dark" href="{{ post.get_update_url }}"><span class="fw-lighter me-1">Edit</span></a>
-            <i class="bi bi-trash me-1"></i><a class="link-dark" href="{{ post.get_delete_url }}"><span class="fw-lighter me-1">Delete</span></a>
-            {% endif %}
-            <br>
-            <i class="bi bi-tag me-1"></i>
-            {% for tag in post.tags.all|dictsort:"name"%}
-            <span class="me-1"><a class="link-light bg-secondary" href="{{tag.get_absolute_url}}"> &nbsp; {{tag.name}} &nbsp;</a></span>
-            {% endfor %}
-        </div>
-        <hr>
+<!-- Banner -->
+{% if banner or banner_url %}
+  <div class="card mb-3">
+    <div class="card-body p-2">
+      <div class="banner-wrap">
+        <img src="{{ banner|default:banner_url }}" alt="Banner" class="banner">
+      </div>
     </div>
-</div>
+  </div>
+{% endif %}
+
+
+
+{% if not most_viewed_posts %}
+  <div class="card">
+    <div class="card-body p-3">
+      <div class="meta">No posts yet.</div>
+    </div>
+  </div>
+{% else %}
+  {% for post in most_viewed_posts %}
+  <div class="card card-hover mb-3">
+    <div class="card-body p-3">
+      <a href="{{ post.get_absolute_url }}">
+        <h3 class="h5 mb-1">{{ post.header }}</h3>
+      </a>
+
+      <div class="meta mb-2 d-flex flex-wrap gap-3">
+        <span><i class="bi bi-eye me-1"></i>{{ post.views }}</span>
+        <span><i class="bi bi-calendar me-1"></i>{{ post.date_updated|date:"d M Y" }} {{ post.date_updated|time:"H:i" }}</span>
+
+        {% if request.user.is_authenticated %}
+          <span>
+            <a class="meta" href="{{ post.get_update_url }}"><i class="bi bi-pencil"></i> edit</a>
+            <span class="mx-2">·</span>
+            <a class="meta" href="{{ post.get_delete_url }}"><i class="bi bi-trash"></i> delete</a>
+          </span>
+        {% endif %}
+      </div>
+
+      <div class="mb-2">
+        {% for tag in post.tags.all|dictsort:"name" %}
+          <a class="chip me-1 mb-1" href="{{ tag.get_absolute_url }}">
+            <i class="bi bi-tag"></i>{{ tag.name }}
+          </a>
+        {% endfor %}
+      </div>
+
+      <div class="prose">
+        {{ post.get_truncated_body }}
+      </div>
+
+      <div class="mt-3">
+        <a class="btn btn-outline-secondary btn-sm" href="{{ post.get_absolute_url }}">Open</a>
+      </div>
+    </div>
+  </div>
 {% endfor %}
+{% endif %}
 
-<!--Recaptcha-->
+<!-- Recaptcha -->
 <form method="post">
-    {% csrf_token %}
-    {{ recaptcha_form.captcha }}     
+  {% csrf_token %}
+  {{ recaptcha_form.captcha }}
 </form>
+
 {% endblock content %}

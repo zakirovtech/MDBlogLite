@@ -1,5 +1,6 @@
 version: '3.7'
 
+name: MDBlogLite
 services:
   web:
     build:
@@ -11,12 +12,12 @@ services:
       - ./env/.env
     depends_on:
       - cache
+    ports:
+      - 8003:8000
     volumes:
       - ./:/usr/app/src/
     restart: always
     command: "bash ./scripts/entrypoint.sh"
-    networks:
-      - nginx_network
 
   cache:
     image: redis:latest
@@ -29,8 +30,6 @@ services:
     env_file:
       - ./env/.env
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
-    networks:
-      - nginx_network
 
   celery_worker:
     restart: always
@@ -45,9 +44,3 @@ services:
       - cache
       - web
     command: 'celery -A config worker -l info'
-    networks:
-      - nginx_network
-
-networks:
-  nginx_network:
-    external: true

@@ -18,6 +18,10 @@ class RateLimitMiddleware:
             "HTTP_X_FORWARDED_FOR", request.META.get("REMOTE_ADDR")
         )
 
+         # If we cannot reliably determine client IP, fail-open (do not block).
+        if not ip:
+            return self.get_response(request)
+
         if ip and "," in ip:
             ip = ip.split(",")[0].strip()
 
@@ -46,7 +50,7 @@ class RateLimitMiddleware:
         cache.set(
             request_count_key,
             request_count + 1,
-            timeout=int(settings.RATE_LIMIT_WINDOW),
+            timeout=int(settings.RATE_LIMIT_WINDOW_SECONDS),
         )
 
         response = self.get_response(request)

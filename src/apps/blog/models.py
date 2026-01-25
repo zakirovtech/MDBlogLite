@@ -150,3 +150,18 @@ class Bio(DateModel):
 
     def __str__(self) -> str:
         return "Bio"
+
+    
+class SiteSettings(models.Model):
+    banner = models.ImageField(upload_to="banner/", blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        # allow only one row
+        if not self.pk and SiteSettings.objects.exists():
+            raise ValueError("Only one SiteSettings instance is allowed.")
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return "Site settings"
+

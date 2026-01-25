@@ -5,15 +5,19 @@ from config.utils import is_postgres_available
 
 DEBUG = True
 
-INSTALLED_APPS.insert(-1, "debug_toolbar")
-MIDDLEWARE.insert(1, "debug_toolbar.middleware.DebugToolbarMiddleware")
-INTERNAL_IPS = ["127.0.0.1", "localhost", "172.18.0.1"]
+ENABLE_DEBUG_TOOLBAR = config("ENABLE_DEBUG_TOOLBAR", default="0") == "1"
+
+if ENABLE_DEBUG_TOOLBAR:
+    INSTALLED_APPS.insert(-1, "debug_toolbar")
+    MIDDLEWARE.insert(1, "debug_toolbar.middleware.DebugToolbarMiddleware")
+    INTERNAL_IPS = ["127.0.0.1", "localhost", "172.18.0.1"]
+
 ADMIN_ENTRYPOINT = "admin/"
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 # CSRF
 CSRF_TRUSTED_ORIGINS = [
-    "http://127.0.0.1:8080",
+    "http://127.0.0.1:8003",
 ]
 
 # You can use the code bellow in production settings, when you need to scale
@@ -23,22 +27,10 @@ CSRF_TRUSTED_ORIGINS = [
 # V
 
 # DATABASES AND REPLICATION
-db_creds = {
-    "ENGINE": "django.db.backends.postgresql",
-    "NAME": config("POSTGRES_DB"),
-    "USER": config("POSTGRES_USER"),
-    "PASSWORD": config("POSTGRES_PASSWORD"),
-    "HOST": "192.168.0.100",  # localhost MasterDB
-    "PORT": config("DB_PORT"),
-}
+USE_POSTGRES = config("USE_POSTGRES", default="0") == "1"
 
-SQLITE3 = None
-
-if not is_postgres_available(credentials=db_creds):
+if not USE_POSTGRES:
     print("[DEBUG] SQLITE3 IS IN USING")
-
-    SQLITE3 = True
-
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -46,27 +38,23 @@ if not is_postgres_available(credentials=db_creds):
         }
     }
 else:
+    POSTGRES_HOST = config("POSTGRES_HOST", default="db")
+    POSTGRES_PORT = config("POSTGRES_PORT", cast=int, default=5432)
+    POSTGRES_DB = config("POSTGRES_DB", default="mdblog")
+    POSTGRES_USER = config("POSTGRES_USER", default="mdblog")
+    POSTGRES_PASSWORD = config("POSTGRES_PASSWORD", default="mdblog")
+
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": config("POSTGRES_DB"),
-            "USER": config("POSTGRES_USER"),
-            "PASSWORD": config("POSTGRES_PASSWORD"),
-            "HOST": "192.168.0.100",  # localhost MasterDB
-            "PORT": config("DB_PORT"),
-        },
-        "replica": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": config("POSTGRES_DB"),
-            "USER": config("POSTGRES_USER"),
-            "PASSWORD": config("POSTGRES_PASSWORD"),
-            "HOST": "192.168.0.101",  # localhost ReplicaDB1
-            "PORT": config("DB_PORT"),
-        },
+            "NAME": POSTGRES_DB,
+            "USER": POSTGRES_USER,
+            "PASSWORD": POSTGRES_PASSWORD,
+            "HOST": POSTGRES_HOST,
+            "PORT": POSTGRES_PORT,
+            "CONN_MAX_AGE": 60,
+        }
     }
-
-if not SQLITE3:
-    DATABASE_ROUTERS = ["config.dbrouting.ReadWriteRouter"]
 
 # CACHE
 CACHES = {

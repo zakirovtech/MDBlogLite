@@ -19,7 +19,7 @@ from django.urls import reverse_lazy
 from django.views import View, generic
 
 from apps.blog.forms import AchievementForm, BioForm, PostForm, TagForm
-from apps.blog.models import Achievement, Bio, Ip, Post, Tag
+from apps.blog.models import Achievement, Bio, Ip, Post, Tag, SiteSettings
 from apps.blog.utils import (
     BioConvertMixin,
     CommonContextMixin,
@@ -38,6 +38,8 @@ class AchievementListView(CommonContextMixin, generic.ListView):
     model = Achievement
     template_name = "achievement_list.html"
     context_object_name = "achievements"
+    paginate_by = 8
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -45,7 +47,7 @@ class AchievementListView(CommonContextMixin, generic.ListView):
         return context
 
 
-class AchievementDetailView(CommonContextMixin, generic.DeleteView):
+class AchievementDetailView(CommonContextMixin, generic.DetailView):
     model = Achievement
     template_name = "achievement_detail.html"
     pk_url_kwarg = "id"
@@ -131,6 +133,9 @@ class HomeView(CommonContextMixin, generic.TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         object_list = self.get_queryset()
+        
+        settings_obj = SiteSettings.objects.first()
+        context["banner_url"] = settings_obj.banner.url if settings_obj and settings_obj.banner else None
 
         # Temporary logic of banner viewing
         if os.path.exists(
@@ -176,26 +181,30 @@ class PostListView(CommonContextMixin, generic.ListView):
         return context
 
     def get_queryset(self) -> QuerySet[Any]:
-        object_list = cache.get(self.cache_key)
+        cached_ids: list[int] | None = cache.get(self.cache_key)
         tag = self.kwargs.get("tag")
 
         if tag is not None:
             tag = unquote_plus(tag)
 
-        if object_list is None:
-            object_list = (
+        if cached_ids is None:
+            base_qs = (
                 super()
                 .get_queryset()
                 .filter(is_active=True)
-                .annotate(views=Count("ips"))
-                .prefetch_related("tags")
                 .order_by("-date_created")
             )
-            cache.set(
-                self.cache_key,
-                object_list,
-                timeout=int(settings.CACHE_TIMEOUT),
-            )
+            cached_ids = list(base_qs.values_list("id", flat=True))
+            cache.set(self.cache_key, cached_ids, timeout=settings.CACHE_TIMEOUT)
+
+        object_list = (
+            super()
+            .get_queryset()
+            .filter(id__in=cached_ids, is_active=True)
+            .annotate(views=Count("ips"))
+            .prefetch_related("tags")
+            .order_by("-date_created")
+        )
 
         if tag is not None:
             return object_list.filter(tags__name=tag)
