@@ -2,7 +2,7 @@
 set -euo pipefail
 
 set -a
-. ./env/.env
+source <(grep -E '^[A-Z_][A-Z0-9_]*=' ./env/.env)
 set +a
 
 : "${SITE_DOMAIN:?SITE_DOMAIN is not set in ./env/.env}"
@@ -73,3 +73,6 @@ fi
 
 mv "$tmp" "$NGINX_CONFIG"
 echo "Updated: $NGINX_CONFIG"
+
+echo "Delete old certbot-http config"
+rm -f "/opt/nginx/conf.d/certbot-http-${SITE_DOMAIN}.conf"
