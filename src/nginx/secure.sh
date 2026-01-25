@@ -31,7 +31,7 @@ server {
 }
 
 server {
-    llisten 443 ssl;
+    listen 443 ssl;
     listen [::]:443 ssl;
     http2 on;
     server_name ${SITE_DOMAIN} www.${SITE_DOMAIN};
