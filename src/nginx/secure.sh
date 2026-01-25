@@ -31,8 +31,9 @@ server {
 }
 
 server {
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
+    llisten 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
     server_name ${SITE_DOMAIN} www.${SITE_DOMAIN};
 
     ssl_certificate /etc/nginx/ssl/live/${SITE_DOMAIN}/fullchain.pem;
