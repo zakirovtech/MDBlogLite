@@ -1,68 +1,324 @@
-# MDBlogLite
+# MDBlogLite — запуск на VPS (Production)
 
-**Stack**: Python, Django, PostgreSQL, Redis, Docker, Nginx, Celery, flake8
+Данный гайд описывает пошаговый запуск блога MDBlogLite на VPS с использованием:
 
-MDBlogLite allows you to deploy a simple blog where posts can be created using Markdown or HTML.
+* Docker + Docker Compose
 
-- The current release includes the ability to create posts, an "About Me" tab, and the standard Django admin panel for managing the author's account.
-- With each new release, additional features will be added.
+* отдельного Nginx в Docker
 
-The goal of this application was defined as creating a simple blog for a single user, so it can be easily deployed on a low-resource VPS.
-- In my case, a VPN was set up on the VPS, which also consumed its resources.
-- You can think of this as a business card website with the capability to write posts.
-- A blog with a more complex architecture will be available soon.
+* Certbot (Let’s Encrypt)
 
-## Build Instructions
+* общей Docker-сети nginx_network
 
-*Ensure Docker and the `make` utility are installed on the VPS.*
+## 0. Предварительные требования
 
-1. Run `make environment` -> This will create the `.env` file.
-2. Run `make prepare` -> This will grant execution permissions to all necessary scripts.
-3. Run `make webserver` -> This will set up the initial `nginx.conf` for configuring HTTPS certificates.
-4. Run `make build` -> This will build the main application container.
-5. Run `make up` -> This will start all containers.
-6. Run `make secure` -> This will rewrite the `nginx.conf` for access via the HTTPS protocol.
-7. Run `make restart` -> This will restart the web server after configuration changes.
+Перед началом убедитесь, что у вас есть:
 
-## Environment Variables
+VPS с Linux (рекомендуется Ubuntu / AlmaLinux)
 
-All essential blog settings should be stored in the `.env` file located in the `env` directory.
+Установлены:
 
-* You can see an example structure in the `.env.template`.
+* docker
 
-```plaintext
-BLOG_NAME=                       # The name of the blog
-SITE_DOMAIN=                     # The domain name of the site
-ADMIN_ENTRYPOINT=                # The entry point for the admin panel (example: www.domain.com/admin)
-ADMIN_USERNAME=                  # The username for the admin account
-ADMIN_EMAIL=                     # The email address for the admin account
-ADMIN_PASSWORD=                  # The password for the admin account
+* docker compose
 
-DJANGO_ENV=production            # The environment setting for Django (production or development)
-SECRET_KEY=                      # The secret key for Django
-ALLOWED_HOSTS=                   # A comma-separated list of allowed hosts (example: example.org,localhost,12.23.345)
+* Арендован домен
 
-SESSION_COOKIE_SECURE=True       # Set to True for secure cookies over HTTPS
-SESSION_COOKIE_AGE=              # The age of session cookies in seconds (When cookies expires, you will need re-login)
-SESSION_COOKIE_HTTPONLY=True     # Set to True to prevent JavaScript access to cookies
+* DNS A-запись домена указывает на IP вашего VPS
 
-RATE_LIMIT_VALUE=15              # Maximum number of requests allowed
-RATE_LIMIT_WINDOW=3              # Time window (in minutes) for rate limiting
-BAN_TIMEOUT=120                  # Time (in seconds) for banning an IP
+* Открыты порты 80 и 443 (firewalld / ufw)
 
-POSTGRES_USER=                   # PostgreSQL database username
-POSTGRES_PASSWORD=               # PostgreSQL database password
-POSTGRES_DB=                     # Name of the PostgreSQL database
-DB_HOST=                         # Hostname or IP address of the database server
-DB_PORT=5432                     # Port number for the database connection
+1. Клонирование репозитория
+```git clone https://github.com/zakirovtech/MDBlogLite.git
+cd MDBlogLite
+```
+2. Настройка переменных окружения
 
-CACHE_DOMAIN=                    # Domain for the cache service
-REDIS_PASSWORD=                  # Password for the Redis server
-REDIS_PORT=6379                  # Port number for the Redis server
-CACHE_TIMEOUT=                   # Cache timeout in seconds
+Перейдите в папку с env-файлами и создайте .env:
 
-SENTRY_STATUS=OFF                # Enable or disable Sentry error tracking (ON/OFF)
-SENTRY_DSN=                      # Sentry DSN for error tracking
+```cd src/env
+cp .env.template .env
+```
 
-RECAPTCHA_SITEKEY=               # Your reCaptcha public sitekey
-RECAPTCHA_SECRET=                # Your reCaptcha secret key
+Заполните все обязательные (refill) переменные, вот пример:
+```
+APP=MDBlogLite
+DOCKER_SERVICE_NAME=web
+BLOG_NAME=refill
+SITE_DOMAIN=refill
+ADMIN_ENTRYPOINT=refill
+ADMIN_USERNAME=refill
+ADMIN_EMAIL=refill valid email
+ADMIN_PASSWORD=refill
+
+DJANGO_ENV=production
+SECRET_KEY=refill strong string
+ALLOWED_HOSTS=refill your domains
+
+SESSION_COOKIE_SECURE=True
+SESSION_COOKIE_AGE=3600
+SESSION_COOKIE_HTTPONLY=True
+
+RATE_LIMIT_VALUE=15
+RATE_LIMIT_WINDOW=3
+BAN_TIMEOUT=120
+RATE_LIMIT_WINDOW_SECONDS=120
+
+POSTGRES_USER=refill
+POSTGRES_PASSWORD=refill
+POSTGRES_DB=mdbloglite
+DB_HOST=db
+DB_PORT=5432
+
+CACHE_DOMAIN=cache
+REDIS_PASSWORD=refill
+REDIS_PORT=6379
+CACHE_TIMEOUT=120
+
+SENTRY_STATUS=OFF
+SENTRY_DSN=
+
+RECAPTCHA_SITEKEY=
+RECAPTCHA_SECRET=
+
+ENABLE_DEBUG_TOOLBAR=
+```
+
+После этого вернитесь в корень проекта:
+
+`cd ..`
+
+## 3. Подготовка домена
+
+Убедитесь, что:
+
+* домен уже арендован
+
+* A-запись домена указывает на IP VPS
+
+* DNS изменения применились (обычно до 10–15 минут)
+
+Проверка:
+
+`ping your-domain.com`
+
+## 4. Подготовка Nginx (в Docker)
+
+Nginx работает отдельно от приложения, в своей Docker-сети nginx_network.
+
+### 4.1 Создание Docker-сети (один раз)
+`docker network create nginx_network || true
+`
+### 4.2 Пример docker-compose для Nginx
+```version: '3.7'
+
+services:
+  nginx:
+    image: nginx:latest
+    container_name: system-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /opt/nginx/conf.d:/etc/nginx/conf.d
+      - /opt/nginx/allowlists:/etc/nginx/allowlists
+      - /opt/nginx/logs:/var/log/nginx/
+      - /opt/certbot/www:/var/www/certbot/:ro
+      - /opt/certbot/conf/:/etc/nginx/ssl/:ro
+
+      # Static / media of applications
+      - /home/<user>/MDBlogLite/src/media/:/MDBlogLite/media/
+      - /home/<user>/MDBlogLite/src/static/:/MDBlogLite/static/
+    networks:
+      - nginx_network
+
+networks:
+  nginx_network:
+    driver: bridge
+    name: nginx_network
+
+```
+Запустите nginx:
+
+`docker compose up -d`
+
+## 5. Создание HTTP-конфига для Certbot
+
+Из папки **src** выполните:
+
+```sudo nginx/certbot.sh
+```
+
+Скрипт:
+
+* создаст HTTP-конфиг nginx
+
+* файл будет в /opt/nginx/conf.d/
+
+* имя файла содержит домен (например **certbot.example.com.conf**)
+
+* добавит /.well-known/acme-challenge/
+
+## 6. Перезагрузка Nginx
+```docker exec system-nginx nginx -t
+docker exec system-nginx nginx -s reload
+```
+## 7. Получение SSL-сертификата (Certbot)
+
+Перейдите в папку certbot и запустите контейнер:
+```
+cd src/certbot
+docker compose up
+```
+
+Certbot:
+
+* проверит доступность домена
+
+* выпустит сертификат Let’s Encrypt
+
+* сохранит его в /opt/certbot/conf/
+
+После успешного получения контейнер можно остановить.
+
+## 8. Запуск web-приложения
+
+Вернитесь в корень проекта:
+
+`cd ../..`
+
+
+Запустите production-сборку приложения:
+
+`docker compose -f docker-compose-production.yaml up -d --build`
+
+Убедитесь, что контейнер web работает и находится в сети nginx_network.
+
+## 9. Создание HTTPS-конфига Nginx
+
+Запустите secure-скрипт:
+
+`sudo nginx/secure.sh`
+
+
+Скрипт:
+
+* создаст HTTPS-сервер
+
+* подключит сертификаты
+
+* настроит proxy на web:8000
+
+* подключит static и media
+
+* Конфиг будет создан в /opt/nginx/conf.d/.
+
+## 10. Финальная перезагрузка Nginx
+docker exec system-nginx nginx -t
+docker exec system-nginx nginx -s reload
+
+✅ Готово
+
+Теперь блог доступен по адресу:
+
+https://your-domain.com
+
+Примечания
+
+* Nginx и приложение должны быть в одной Docker-сети
+
+* Certbot использует HTTP (порт 80) только для выпуска/обновления сертификатов
+
+* HTTPS работает постоянно через nginx
+
+* Все nginx-конфиги и сертификаты лежат вне проекта, в /opt
+
+## Переменные окружения (.env) — описание
+```
+# Общие
+
+APP — имя приложения/папки, используется в nginx-конфигах (пути к /APP/static и /APP/media).
+
+DOCKER_SERVICE_NAME — имя сервиса в docker-compose, на который nginx проксирует (обычно web).
+
+BLOG_NAME — название блога (используется в админке/шапках/титулах).
+
+SITE_DOMAIN — основной домен сайта (например example.com), используется в nginx и certbot.
+
+ADMIN_ENTRYPOINT — путь к админке Django (например admin/ или super-secret-admin/).
+
+# Админ-пользователь (инициализация)
+
+ADMIN_USERNAME — логин администратора (superuser).
+
+ADMIN_EMAIL — email администратора (superuser) + используется certbot (если также применяется как контакт).
+
+ADMIN_PASSWORD — пароль администратора (superuser).
+
+Django / Security
+
+DJANGO_ENV — окружение (production, development), влияет на выбор настроек.
+
+SECRET_KEY — секретный ключ Django (обязательно сильный, уникальный).
+
+ALLOWED_HOSTS — список разрешённых хостов (домены и/или IP через запятую).
+
+# Cookies / Sessions
+
+SESSION_COOKIE_SECURE — ставить cookie только по HTTPS (True для прод).
+
+SESSION_COOKIE_AGE — время жизни сессии в секундах.
+
+SESSION_COOKIE_HTTPONLY — запрет доступа к cookie из JS (True рекомендуется).
+
+Rate limiting / Ban (защита от брута/спама)
+
+RATE_LIMIT_VALUE — сколько запросов/попыток разрешено за окно.
+
+RATE_LIMIT_WINDOW — размер окна (используется вместе со следующей переменной; см. реализацию).
+
+BAN_TIMEOUT — время бана в секундах.
+
+RATE_LIMIT_WINDOW_SECONDS — размер окна rate limit в секундах.
+
+Примечание: у тебя одновременно есть RATE_LIMIT_WINDOW и RATE_LIMIT_WINDOW_SECONDS. Лучше оставить одну (секунды) — но это зависит от того, как именно ты используешь их в коде.
+
+# PostgreSQL (prod)
+
+POSTGRES_USER — пользователь БД Postgres.
+
+POSTGRES_PASSWORD — пароль пользователя БД.
+
+POSTGRES_DB — имя базы данных.
+
+DB_HOST — хост базы (в docker-compose обычно db).
+
+DB_PORT — порт Postgres (обычно 5432).
+
+# Redis / Cache
+
+CACHE_DOMAIN — хост Redis/кэша (в docker-compose обычно cache).
+
+REDIS_PASSWORD — пароль Redis (если включена авторизация; если нет — оставить пустым или выключить в конфиге).
+
+REDIS_PORT — порт Redis (обычно 6379).
+
+CACHE_TIMEOUT — TTL по умолчанию для кэша (секунды).
+
+# Sentry (ошибки)
+
+SENTRY_STATUS — включить/выключить sentry (ON/OFF).
+
+SENTRY_DSN — DSN проекта Sentry (строка подключения).
+
+# reCAPTCHA
+
+RECAPTCHA_SITEKEY — публичный ключ reCAPTCHA (вставляется на клиенте).
+
+RECAPTCHA_SECRET — секретный ключ reCAPTCHA (проверка на сервере).
+
+Debug
+
+ENABLE_DEBUG_TOOLBAR — включение Django Debug Toolbar (только для dev; в prod должно быть пусто/False).
+```
