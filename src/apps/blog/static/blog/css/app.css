@@ -12,6 +12,19 @@
   --accent-2: #16a34a;
 
   --radius: 14px;
+    /* Bootstrap theme variables */
+  --bs-body-bg: var(--bg);
+  --bs-body-color: var(--text);
+  --bs-secondary-color: var(--muted);
+  --bs-border-color: var(--border);
+  --bs-body-font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+
+  --bs-link-color: var(--accent);
+  --bs-link-hover-color: var(--accent);
+
+  --bs-tertiary-bg: var(--panel);
+  --bs-secondary-bg: var(--panel);
+
 }
 
 /* Dark theme */
@@ -24,6 +37,18 @@
     --border: rgba(231, 237, 246, 0.12);
     --accent: #58a6ff;
     --accent-2: #3ddc97;
+
+     /* Bootstrap theme variables (dark) */
+    --bs-body-bg: var(--bg);
+    --bs-body-color: var(--text);
+    --bs-secondary-color: var(--muted);
+    --bs-border-color: var(--border);
+
+    --bs-link-color: var(--accent);
+    --bs-link-hover-color: var(--accent);
+
+    --bs-tertiary-bg: var(--panel);
+    --bs-secondary-bg: var(--panel);
   }
 }
 
